@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "949494670699",
+    "project_id": "cinemaguess-80df6",
+    "storage_bucket": "cinemaguess-80df6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949494670699:android:79d2e0358368a9d8a6582e",
+        "android_client_info": {
+          "package_name": "com.example.cinema_guess"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949494670699-l75509se8k7bccdaci0e6b81h6e2rlmb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCpH2qnHOv7YXAYFetSsGcKGdsF2MHqtlg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "949494670699-l75509se8k7bccdaci0e6b81h6e2rlmb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "949494670699-60uo13hahbeeu6bqcd3md3v0uh5075al.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.cinemaGuess"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
