@@ -54,6 +54,24 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+
+        multiDexEnabled true
+    }
+
+    flavorDimensions "app"
+
+    productFlavors {
+        dev {
+            dimension "app"
+            resValue "string", "app_name", "CinemaGuess-Dev"
+            versionNameSuffix "-dev"
+            applicationId "com.example.cinema_guess"
+        }
+        prod {
+            dimension "app"
+            applicationId "inc.hapk.cinemaguess"
+            resValue "string", "app_name", "CinemaGuess"
+        }
     }
 
     buildTypes {
@@ -71,4 +89,6 @@ flutter {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    implementation 'com.android.support:multidex:1.0.3'
 }

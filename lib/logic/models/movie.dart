@@ -10,6 +10,8 @@ class Movie with _$Movie {
   @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
   factory Movie({
     required Lang lang,
+    String? mCast,
+    @Default([]) List<String> suggestions,
     required String name,
     required num releasedOn,
     required String postedOn,

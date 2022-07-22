@@ -99,4 +99,23 @@ class MovieDatabase {
     );
     return transactionResult.committed;
   }
+
+  Future<Map<String, Movie>> get allMovies async {
+    return movieRef.get().then(
+      (DataSnapshot snapshot) {
+        print(snapshot.value);
+        Map movies = snapshot.value as Map;
+        movies.updateAll(
+          (key, value) {
+            print(value);
+            Map m = value;
+            Map<String, dynamic> json = Map<String, dynamic>.from(m);
+            Movie movie = Movie.fromJson(json);
+            return movie;
+          },
+        );
+        return movies.cast<String, Movie>();
+      },
+    );
+  }
 }

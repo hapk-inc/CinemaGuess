@@ -8,6 +8,11 @@ part of 'movie.dart';
 
 _$_Movie _$$_MovieFromJson(Map<String, dynamic> json) => _$_Movie(
       lang: $enumDecode(_$LangEnumMap, json['lang']),
+      mCast: json['m_cast'] as String?,
+      suggestions: (json['suggestions'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       name: json['name'] as String,
       releasedOn: json['released_on'] as num,
       postedOn: json['posted_on'] as String,
@@ -23,6 +28,8 @@ _$_Movie _$$_MovieFromJson(Map<String, dynamic> json) => _$_Movie(
 
 Map<String, dynamic> _$$_MovieToJson(_$_Movie instance) => <String, dynamic>{
       'lang': _$LangEnumMap[instance.lang],
+      'm_cast': instance.mCast,
+      'suggestions': instance.suggestions,
       'name': instance.name,
       'released_on': instance.releasedOn,
       'posted_on': instance.postedOn,
@@ -33,4 +40,5 @@ Map<String, dynamic> _$$_MovieToJson(_$_Movie instance) => <String, dynamic>{
 const _$LangEnumMap = {
   Lang.tamil: 'tamil',
   Lang.english: 'english',
+  Lang.hindi: 'hindi',
 };

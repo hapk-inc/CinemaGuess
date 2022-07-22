@@ -21,6 +21,8 @@ Movie _$MovieFromJson(Map<String, dynamic> json) {
 /// @nodoc
 mixin _$Movie {
   Lang get lang => throw _privateConstructorUsedError;
+  String? get mCast => throw _privateConstructorUsedError;
+  List<String> get suggestions => throw _privateConstructorUsedError;
   String get name => throw _privateConstructorUsedError;
   num get releasedOn => throw _privateConstructorUsedError;
   String get postedOn => throw _privateConstructorUsedError;
@@ -38,6 +40,8 @@ abstract class $MovieCopyWith<$Res> {
       _$MovieCopyWithImpl<$Res>;
   $Res call(
       {Lang lang,
+      String? mCast,
+      List<String> suggestions,
       String name,
       num releasedOn,
       String postedOn,
@@ -56,6 +60,8 @@ class _$MovieCopyWithImpl<$Res> implements $MovieCopyWith<$Res> {
   @override
   $Res call({
     Object? lang = freezed,
+    Object? mCast = freezed,
+    Object? suggestions = freezed,
     Object? name = freezed,
     Object? releasedOn = freezed,
     Object? postedOn = freezed,
@@ -67,6 +73,14 @@ class _$MovieCopyWithImpl<$Res> implements $MovieCopyWith<$Res> {
           ? _value.lang
           : lang // ignore: cast_nullable_to_non_nullable
               as Lang,
+      mCast: mCast == freezed
+          ? _value.mCast
+          : mCast // ignore: cast_nullable_to_non_nullable
+              as String?,
+      suggestions: suggestions == freezed
+          ? _value.suggestions
+          : suggestions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       name: name == freezed
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -98,6 +112,8 @@ abstract class _$$_MovieCopyWith<$Res> implements $MovieCopyWith<$Res> {
   @override
   $Res call(
       {Lang lang,
+      String? mCast,
+      List<String> suggestions,
       String name,
       num releasedOn,
       String postedOn,
@@ -117,6 +133,8 @@ class __$$_MovieCopyWithImpl<$Res> extends _$MovieCopyWithImpl<$Res>
   @override
   $Res call({
     Object? lang = freezed,
+    Object? mCast = freezed,
+    Object? suggestions = freezed,
     Object? name = freezed,
     Object? releasedOn = freezed,
     Object? postedOn = freezed,
@@ -128,6 +146,14 @@ class __$$_MovieCopyWithImpl<$Res> extends _$MovieCopyWithImpl<$Res>
           ? _value.lang
           : lang // ignore: cast_nullable_to_non_nullable
               as Lang,
+      mCast: mCast == freezed
+          ? _value.mCast
+          : mCast // ignore: cast_nullable_to_non_nullable
+              as String?,
+      suggestions: suggestions == freezed
+          ? _value._suggestions
+          : suggestions // ignore: cast_nullable_to_non_nullable
+              as List<String>,
       name: name == freezed
           ? _value.name
           : name // ignore: cast_nullable_to_non_nullable
@@ -158,12 +184,15 @@ class __$$_MovieCopyWithImpl<$Res> extends _$MovieCopyWithImpl<$Res>
 class _$_Movie implements _Movie {
   _$_Movie(
       {required this.lang,
+      this.mCast,
+      final List<String> suggestions = const [],
       required this.name,
       required this.releasedOn,
       required this.postedOn,
       final List<String> usersFound = const [],
       final List<String> usersPlayed = const []})
-      : _usersFound = usersFound,
+      : _suggestions = suggestions,
+        _usersFound = usersFound,
         _usersPlayed = usersPlayed;
 
   factory _$_Movie.fromJson(Map<String, dynamic> json) =>
@@ -171,6 +200,16 @@ class _$_Movie implements _Movie {
 
   @override
   final Lang lang;
+  @override
+  final String? mCast;
+  final List<String> _suggestions;
+  @override
+  @JsonKey()
+  List<String> get suggestions {
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_suggestions);
+  }
+
   @override
   final String name;
   @override
@@ -195,7 +234,7 @@ class _$_Movie implements _Movie {
 
   @override
   String toString() {
-    return 'Movie(lang: $lang, name: $name, releasedOn: $releasedOn, postedOn: $postedOn, usersFound: $usersFound, usersPlayed: $usersPlayed)';
+    return 'Movie(lang: $lang, mCast: $mCast, suggestions: $suggestions, name: $name, releasedOn: $releasedOn, postedOn: $postedOn, usersFound: $usersFound, usersPlayed: $usersPlayed)';
   }
 
   @override
@@ -204,6 +243,9 @@ class _$_Movie implements _Movie {
         (other.runtimeType == runtimeType &&
             other is _$_Movie &&
             const DeepCollectionEquality().equals(other.lang, lang) &&
+            const DeepCollectionEquality().equals(other.mCast, mCast) &&
+            const DeepCollectionEquality()
+                .equals(other._suggestions, _suggestions) &&
             const DeepCollectionEquality().equals(other.name, name) &&
             const DeepCollectionEquality()
                 .equals(other.releasedOn, releasedOn) &&
@@ -219,6 +261,8 @@ class _$_Movie implements _Movie {
   int get hashCode => Object.hash(
       runtimeType,
       const DeepCollectionEquality().hash(lang),
+      const DeepCollectionEquality().hash(mCast),
+      const DeepCollectionEquality().hash(_suggestions),
       const DeepCollectionEquality().hash(name),
       const DeepCollectionEquality().hash(releasedOn),
       const DeepCollectionEquality().hash(postedOn),
@@ -239,6 +283,8 @@ class _$_Movie implements _Movie {
 abstract class _Movie implements Movie {
   factory _Movie(
       {required final Lang lang,
+      final String? mCast,
+      final List<String> suggestions,
       required final String name,
       required final num releasedOn,
       required final String postedOn,
@@ -249,6 +295,10 @@ abstract class _Movie implements Movie {
 
   @override
   Lang get lang => throw _privateConstructorUsedError;
+  @override
+  String? get mCast => throw _privateConstructorUsedError;
+  @override
+  List<String> get suggestions => throw _privateConstructorUsedError;
   @override
   String get name => throw _privateConstructorUsedError;
   @override

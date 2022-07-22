@@ -99,9 +99,10 @@ class __$$_PlayerCopyWithImpl<$Res> extends _$PlayerCopyWithImpl<$Res>
 /// @nodoc
 
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
-class _$_Player implements _Player {
+class _$_Player extends _Player {
   _$_Player({required this.name, final Map<dynamic, dynamic> rounds = const {}})
-      : _rounds = rounds;
+      : _rounds = rounds,
+        super._();
 
   factory _$_Player.fromJson(Map<String, dynamic> json) =>
       _$$_PlayerFromJson(json);
@@ -148,10 +149,11 @@ class _$_Player implements _Player {
   }
 }
 
-abstract class _Player implements Player {
+abstract class _Player extends Player {
   factory _Player(
       {required final String name,
       final Map<dynamic, dynamic> rounds}) = _$_Player;
+  _Player._() : super._();
 
   factory _Player.fromJson(Map<String, dynamic> json) = _$_Player.fromJson;
 

@@ -1,367 +1,285 @@
+import 'dart:collection';
+import 'dart:math';
+
+import 'package:animate_do/animate_do.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_route/auto_route.dart';
-import 'package:cinema_guess/logic/caps.dart';
+import 'package:auto_size_text/auto_size_text.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cinema_guess/logic/provider_list.dart';
-import 'package:cinema_guess/routes/my_route.dart';
-import 'package:firebase_database/firebase_database.dart';
-import 'package:firebase_database/ui/firebase_animated_list.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 
+import '../logic/caps.dart';
 import '../logic/models/language.dart';
 import '../logic/models/movie.dart';
 import '../logic/models/player.dart';
+import '../routes/my_route.dart';
 
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends ConsumerWidget {
   const DashboardPage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        backgroundColor: Colors.blue,
-        body: SafeArea(
-          child: LayoutBuilder(
-            builder: (context, constraints) =>
-                constraints.maxHeight > constraints.maxWidth
+  Widget build(BuildContext context, WidgetRef ref) {
+    final orientation = MediaQuery.of(context).orientation;
+    return Scaffold(
+      backgroundColor: Colors.blue.shade900,
+      body: SafeArea(
+          child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: ref.watch(allMoviesProvider).maybeWhen(
+            orElse: () => Center(
+                  child: DefaultTextStyle(
+                    style: GoogleFonts.poppins(fontSize: 20),
+                    child: AnimatedTextKit(
+                      animatedTexts: [WavyAnimatedText('Loading all movies')],
+                      isRepeatingAnimation: true,
+                    ),
+                  ),
+                ),
+            data: (map) => map.isEmpty
+                ? Container()
+                : orientation == Orientation.portrait
                     ? const DashboardPortrait()
-                    : const DashboardLandscape(),
-          ),
-        ),
-      );
+                    : const DashboardLandscape()),
+      )),
+    );
+  }
 }
 
-final movie = Movie(
-    lang: Lang.tamil, name: "aa", releasedOn: 2004, postedOn: "Jun 22,2022");
+const List<String> noOnePlayedTamil = [
+  "துவக்கம் சரியா இருக்கணும்",
+  "ஆரம்பிக்களாங்களா??"
+];
 
-class DashboardPortrait extends StatelessWidget {
+const List<String> noOnePlayedEng = [
+  "Be the first to guess",
+  "Take the lead",
+  "Wanna know the movie before everyone else?"
+];
+
+class DashboardPortrait extends ConsumerWidget {
   const DashboardPortrait({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Map<String, Movie> allMovies = ref.watch(allMoviesProvider).value!;
+
+    final now = DateTime.now();
+    String formatterNow = DateFormat('yMMMMd').format(now);
 
     return Column(
       children: [
         Flexible(
-          flex: 3,
-          child: Container(
-            color: Colors.red,
-            constraints: const BoxConstraints.expand(),
-            padding: EdgeInsets.all(highest * 0.01),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Flexible(child: TodayMovieText()),
-                Flexible(
-                  flex: 4,
-                  child: TodayMovieList(isPortrait: true),
-                )
-              ],
-            ),
+          flex: 4,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              const Flexible(child: DashboardHeader()),
+              Flexible(
+                flex: 2,
+                child: FractionallySizedBox(
+                  widthFactor: 1,
+                  child: FadeIn(
+                    child: CarouselSlider(
+                      items: allMovies.entries
+                          .where((element) =>
+                              element.value.postedOn == formatterNow)
+                          .map((e) => CarouselTodayMovieTile(e))
+                          .toList(),
+                      options: CarouselOptions(),
+                    ),
+                  ),
+                ),
+              )
+            ],
           ),
         ),
         const Flexible(
           flex: 6,
-          child: DashboardPrevMovies(),
-        ),
-        Flexible(
-          child: Container(
-            color: Colors.blue.shade200,
-            child: ListTile(
-              title: RichText(
-                text: TextSpan(
-                  text: "HAPK ",
-                  children: [
-                    TextSpan(
-                      text: "presents",
-                      style: TextStyle(
-                        fontSize: highest * 0.015,
-                        color: Colors.black38,
-                      ),
-                    )
-                  ],
-                  style: GoogleFonts.poppins(
-                    fontSize: highest * 0.02,
-                    color: Colors.black54,
-                  ),
-                ),
-              ),
-              subtitle: Text(
-                "CinemaGuess",
-                style: GoogleFonts.poppins(
-                  fontSize: highest * 0.03,
-                  color: Colors.black87,
-                ),
-              ),
-            ),
-          ),
-        ),
+          child: const LangMovies(),
+        )
       ],
     );
   }
 }
 
-class DashboardPrevMovies extends ConsumerWidget {
-  const DashboardPrevMovies({Key? key}) : super(key: key);
+class LangMovies extends StatelessWidget {
+  const LangMovies({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
-
-    return DefaultTabController(
-      length: Lang.values.length,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          Flexible(
-            child: TabBar(
-              tabs: Lang.values
-                  .map(
-                    (e) => Tab(
-                      text: e.name.capitalize,
-                    ),
-                  )
-                  .toList(),
-            ),
+    return FadeInUp(
+      child: Container(
+        constraints: const BoxConstraints.expand(),
+        padding: EdgeInsets.all(size.shortestSide * 0.01),
+        decoration: BoxDecoration(
+          color: Colors.white70,
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(size.shortestSide * 0.075),
+            topRight: Radius.circular(size.shortestSide * 0.075),
           ),
-          Flexible(
-            flex: 4,
-            child: TabBarView(
-              children: Lang.values
-                  .map<Widget>(
-                    (e) => ref.watch(langMoviesProvider(e)).when(
-                          data: (map) {
-                            // print("langMovies Size ${list.length}");
-                            return map.isEmpty
-                                ? Container(
-                                    alignment: Alignment.center,
-                                    child: Text(
-                                      "No movies yet",
-                                      style: GoogleFonts.poppins(),
-                                    ),
-                                  )
-                                : ListView(
-                                    padding: EdgeInsets.all(highest * 0.01),
-                                    scrollDirection: Axis.horizontal,
-                                    children: map.entries.map(
-                                      (e) {
-                                        final String id = e.key;
-                                        Map m = e.value as Map;
-                                        Map<String, dynamic> json =
-                                            Map<String, dynamic>.from(m);
-                                        Movie movie = Movie.fromJson(json);
-                                        return PrevMovieTile(id, movie);
-                                      },
-                                    ).toList(),
-                                  );
-                          },
-                          error: (e, s) => Container(),
-                          loading: () => Container(),
-                        ),
-                  )
-                  .toList(),
-            ),
+        ),
+        child: DefaultTabController(
+          length: Lang.values.length,
+          child: Column(
+            children: [
+              Flexible(
+                child: TabBar(
+                  tabs: Lang.values
+                      .map((e) => Tab(text: e.name.capitalize))
+                      .toList(),
+                ),
+              ),
+              const Expanded(flex: 4, child: LangMoviesPortrait())
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class TodayMovieTile extends ConsumerWidget {
+class AllMovieTileLandscape extends ConsumerWidget {
+  const AllMovieTileLandscape(this.id, this.movie, {Key? key})
+      : super(key: key);
+
   final String id;
   final Movie movie;
-  const TodayMovieTile(this.id, {Key? key, required this.movie})
-      : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String user = ref.watch(firebaseUserProvider).uid;
+    final String uid = ref.watch(firebaseUserProvider).uid;
+    final iMovie = ref
+        .watch(movieProvider(id))
+        .maybeWhen(orElse: () => movie, data: (a) => a);
+    final size = MediaQuery.of(context).size;
 
-    final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
+    final portraitImageUrl = ref
+        .watch(moviePosterProvider(id))
+        .maybeWhen(orElse: () => "", data: (url) => url);
 
-    final Player? player = ref.watch(playerProvider(user)).when(
-        data: (data) => data,
-        error: (e, s) {
-          print(e);
-          print(s);
-          return null;
-        },
-        loading: () => null);
-    final playerRounds = player?.rounds ?? {};
+    final landScapeImageUrl = ref
+        .watch(moviePosterLandscapeProvider(id))
+        .maybeWhen(orElse: () => "", data: (url) => url);
 
-    final bool userFoundCheck =
-        movie.usersFound.contains(user) || (playerRounds[id] == 6);
+    final bool alreadyFound = iMovie.usersFound.contains(uid);
     return SizedBox(
-      width: highest * 0.4,
-      height: highest * 0.2,
+      width: size.width * 0.275,
       child: Card(
+        color: Colors.lightBlue.shade900,
         elevation: 4,
-        color: userFoundCheck ? null : Colors.brown,
-        child: userFoundCheck
-            ? GridTile(
-                footer: Container(
-                  color: Colors.black45,
-                  height: highest * 0.05,
-                  alignment: Alignment.centerLeft,
-                  padding: EdgeInsets.symmetric(horizontal: size.width * 0.02),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Flexible(
-                        flex: 2,
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 500),
+          child: alreadyFound
+              ? portraitImageUrl.isEmpty
+                  ? Container()
+                  : GridTile(
+                      footer: Container(
+                        height: size.height * 0.12,
+                        color: Colors.transparent.withOpacity(0.5),
+                        alignment: Alignment.centerLeft,
+                        padding:
+                            EdgeInsets.symmetric(horizontal: size.width * 0.01),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Flexible(
                               flex: 2,
-                              child: FittedBox(
-                                child: Text(
-                                  "${movie.name} (${movie.releasedOn})"
-                                      .capitalize,
-                                  style: GoogleFonts.poppins(
-                                      fontSize: highest * 0.02,
-                                      color: Colors.white70),
-                                ),
+                              child: AutoSizeText(
+                                iMovie.name.capitalize,
+                                maxLines: 1,
+                                style: TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: size.width * 0.025),
                               ),
                             ),
                             Flexible(
-                              child: FittedBox(
-                                child: AnimatedSwitcher(
-                                  key: ValueKey(movie),
-                                  duration: const Duration(milliseconds: 500),
-                                  child: Text(
-                                    "${movie.usersFound.length} found",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: highest * 0.015,
-                                      color: Colors.white38,
-                                    ),
+                              child: TextButton(
+                                onPressed: () => showDialog(
+                                  context: context,
+                                  useSafeArea: true,
+                                  builder: (_) => MovieInfoDialog(
+                                    landScapeImageUrl: landScapeImageUrl,
+                                    iMovie: iMovie,
+                                    id: id,
+                                    portraitImageUrl: portraitImageUrl,
                                   ),
                                 ),
+                                child: const Text("VIEW"),
                               ),
                             )
                           ],
                         ),
                       ),
-                      /* Flexible(
-              child: Text(
-                "${movie.usersFound.length} users found this..",
-                style: GoogleFonts.poppins(
-                  color: Colors.white60,
-                  fontSize: size.width * 0.03,
-                ),
-              ),
-            )*/
-                    ],
-                  ),
-                ),
-                child: ref.watch(moviePosterLandscapeProvider(id)).when(
-                    data: (data) => Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                              image: NetworkImage(data),
-                              fit: BoxFit.fill,
-                              //opacity: 0.5,
-                            ),
-                          ),
-                        ),
-                    error: (error, s) => Container(),
-                    loading: () => Container()),
-              )
-            : Align(
-                alignment: Alignment.centerLeft,
-                child: ListTile(
-                  title: Text(
-                    "Guess the ${movie.lang.name} movie",
-                    style: GoogleFonts.poppins(color: Colors.white70),
-                  ),
-                  subtitle: Text(
-                    "${movie.usersPlayed.length} playing this round",
-                    style: GoogleFonts.poppins(color: Colors.grey),
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-class PrevMovieTile extends ConsumerWidget {
-  final String movieId;
-  final Movie movie;
-  const PrevMovieTile(this.movieId, this.movie, {Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final String user = ref.watch(firebaseUserProvider).uid;
-    //final user = "a";
-
-    final Player? player = ref.watch(playerProvider(user)).when(
-        data: (data) => data,
-        error: (e, s) {
-          print(e);
-          print(s);
-          return null;
-        },
-        loading: () => null);
-    final playerRounds = player?.rounds ?? {};
-    final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
-    final userFoundCheck =
-        movie.usersFound.contains(user) || (playerRounds[movieId] == 6);
-    return SizedBox(
-      width: highest * 0.275,
-      //height: 50,
-      child: InkWell(
-        onTap: userFoundCheck
-            ? null
-            : () {
-                ref.read(movieIdProvider.notifier).state = movieId;
-                context.router.push(GameRoute(movie: movie));
-              },
-        child: Card(
-          elevation: 4,
-          color: userFoundCheck ? null : Colors.brown,
-          child: userFoundCheck
-              ? ref.watch(moviePosterProvider(movieId)).maybeWhen(
-                    orElse: () => Container(),
-                    data: (url) => GridTile(
-                      footer: Container(
-                        color: Colors.black45,
-                        height: highest * 0.05,
-                        alignment: Alignment.centerLeft,
-                        padding:
-                            EdgeInsets.symmetric(horizontal: highest * 0.01),
-                        child: Text(
-                          "${movie.name} (${movie.releasedOn})".capitalize,
-                          style: GoogleFonts.poppins(
-                              fontSize: highest * 0.015, color: Colors.white70),
-                        ),
-                      ),
                       child: Container(
+                        padding: EdgeInsets.all(size.shortestSide * 0.01),
                         decoration: BoxDecoration(
                           image: DecorationImage(
-                            image: NetworkImage(url),
+                            image: NetworkImage(portraitImageUrl),
                             fit: BoxFit.cover,
                           ),
                         ),
-                        //child: Text("ll"),
                       ),
-                    ),
-                  )
-              : Align(
-                  alignment: Alignment.centerLeft,
-                  child: ListTile(
-                    title: Text(
-                      "Guess the ${movie.lang.name} movie",
-                      style: GoogleFonts.poppins(color: Colors.white70),
-                    ),
-                    subtitle: Text(
-                      "${movie.usersPlayed.length} playing this round",
-                      style: GoogleFonts.poppins(color: Colors.grey),
+                    )
+              : InkWell(
+                  onTap: () {
+                    ref.read(movieIdProvider.notifier).state = id;
+                    context.router.push(GameRoute(movie: iMovie));
+                  },
+                  child: Padding(
+                    padding: EdgeInsets.all(size.shortestSide * 0.01),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Flexible(
+                          child: AutoSizeText(
+                            movie.postedOn,
+                            minFontSize: 24,
+                            maxFontSize: 36,
+                            style: const TextStyle(color: Colors.white60),
+                            maxLines: 2,
+                          ),
+                        ),
+                        // const Spacer(),
+                        Flexible(
+                          child: Center(
+                            child: AutoSizeText(
+                              "Click here",
+                              style: TextStyle(
+                                fontSize: size.shortestSide * 0.07,
+                                color: Colors.white60,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          child: Container(
+                            alignment: Alignment.bottomLeft,
+                            child: DefaultTextStyle(
+                              style: GoogleFonts.poppins(color: Colors.white38),
+                              child: AnimatedTextKit(
+                                animatedTexts: [
+                                  FadeAnimatedText(
+                                      '${iMovie.usersPlayed.length} played this quiz'),
+                                  FadeAnimatedText(
+                                      '${iMovie.usersFound.length} found this quiz'),
+                                ],
+                                pause: Duration(seconds: Random().nextInt(5)),
+                                onTap: () {
+                                  print("Tap Event");
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -371,95 +289,511 @@ class PrevMovieTile extends ConsumerWidget {
   }
 }
 
-class DashboardLandscape extends ConsumerWidget {
-  const DashboardLandscape({Key? key}) : super(key: key);
+class LangMoviesPortrait extends ConsumerWidget {
+  const LangMoviesPortrait({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
+    final size = MediaQuery.of(context).size;
 
-    return Row(
-      children: [
-        Flexible(
-          flex: 4,
-          child: Container(
-            color: Colors.red,
-            padding: EdgeInsets.all(highest * 0.01),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                Flexible(child: TodayMovieText()),
-                Flexible(
-                  flex: 4,
-                  child: TodayMovieList(),
-                )
-              ],
-            ),
+    final Map<String, Movie> allMovies = Map<String, Movie>.from(
+      ref.watch(allMoviesProvider).maybeWhen(
+            orElse: () => {},
+            data: (v) => v,
           ),
-        ),
-        const Flexible(
-          flex: 6,
-          child: DashboardPrevMovies(),
-        ),
-      ],
+    );
+
+    final User user = ref.watch(firebaseUserProvider);
+
+    final orientation = MediaQuery.of(context).orientation;
+
+    return TabBarView(
+      physics: const NeverScrollableScrollPhysics(),
+      children: Lang.values.map(
+        (lang) {
+          final Map<String, Movie> langMovies = {};
+          allMovies.forEach((key, value) {
+            final checkDate = DateTime.now().subtract(
+                Duration(days: orientation == Orientation.portrait ? 1 : 0));
+            DateTime date = DateFormat("yMMMMd").parse(value.postedOn);
+
+            if (checkDate.compareTo(date) == 1 && value.lang == lang) {
+              langMovies[key] = value;
+            }
+          });
+
+          print(langMovies);
+
+          final sorted = SplayTreeMap<String, Movie>.from(
+            langMovies,
+            (m1, m2) {
+              Movie a = langMovies[m1]!;
+              Movie b = langMovies[m2]!;
+
+              DateTime aDate = DateFormat("yMMMMd").parse(a.postedOn);
+              DateTime bDate = DateFormat("yMMMMd").parse(b.postedOn);
+
+              return aDate.compareTo(bDate);
+            },
+          );
+
+          return ListView(
+            reverse: true,
+            padding: EdgeInsets.all(size.shortestSide * 0.02),
+            scrollDirection: Axis.horizontal,
+            children: sorted.entries
+                // .where((element) => element.value.lang == lang)
+                .map((eMap) {
+              final portraitImageUrl = ref
+                  .watch(moviePosterProvider(eMap.key))
+                  .maybeWhen(orElse: () => "", data: (url) => url);
+
+              final landScapeImageUrl =
+                  ref.watch(moviePosterLandscapeProvider(eMap.key)).maybeWhen(
+                        orElse: () => "",
+                        data: (url) => url,
+                      );
+
+              return orientation == Orientation.landscape
+                  ? AllMovieTileLandscape(eMap.key, eMap.value)
+                  : SizedBox(
+                      width: size.width * 0.5,
+                      child: Card(
+                        color: Colors.lightBlue.shade900,
+                        elevation: 4,
+                        child: eMap.value.usersFound.contains(user.uid)
+                            ? GridTile(
+                                footer: Container(
+                                  height: size.height * 0.07,
+                                  color: Colors.transparent.withOpacity(0.5),
+                                  //color: Colors.red,
+                                  alignment: Alignment.centerLeft,
+                                  padding: EdgeInsets.symmetric(
+                                      horizontal: size.width * 0.02),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Flexible(
+                                        flex: 2,
+                                        child: AutoSizeText(
+                                          eMap.value.name.capitalize,
+                                          style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: size.width * 0.04),
+                                          maxLines: 1,
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: TextButton(
+                                          onPressed: () => showDialog(
+                                            context: context,
+                                            useSafeArea: true,
+                                            builder: (_) => MovieInfoDialog(
+                                              id: eMap.key,
+                                              iMovie: eMap.value,
+                                              portraitImageUrl:
+                                                  portraitImageUrl,
+                                              landScapeImageUrl:
+                                                  landScapeImageUrl,
+                                            ),
+                                          ),
+                                          child: const Text("VIEW"),
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                                child: AnimatedSwitcher(
+                                  duration: const Duration(milliseconds: 500),
+                                  child: portraitImageUrl.isEmpty
+                                      ? Container()
+                                      : Container(
+                                          padding: EdgeInsets.all(
+                                              size.shortestSide * 0.01),
+                                          decoration: BoxDecoration(
+                                            image: DecorationImage(
+                                              image: NetworkImage(
+                                                  portraitImageUrl),
+                                              fit: BoxFit.fitWidth,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              )
+                            : InkWell(
+                                onTap: () {
+                                  ref.read(movieIdProvider.notifier).state =
+                                      eMap.key;
+                                  context.router
+                                      .push(GameRoute(movie: eMap.value));
+                                },
+                                child: Padding(
+                                  padding:
+                                      EdgeInsets.all(size.shortestSide * 0.01),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceAround,
+                                    children: [
+                                      Flexible(
+                                        child: AutoSizeText(
+                                          eMap.value.postedOn,
+                                          minFontSize: 24,
+                                          maxFontSize: 36,
+                                          style: const TextStyle(
+                                            color: Colors.white60,
+                                          ),
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                      Flexible(
+                                        child: Center(
+                                          child: AutoSizeText(
+                                            "Click this!",
+                                            style: TextStyle(
+                                                fontSize:
+                                                    size.shortestSide * 0.07),
+                                          ),
+                                        ),
+                                      ),
+                                      Flexible(
+                                        fit: FlexFit.tight,
+                                        child: AnimatedTextKit(
+                                          animatedTexts: [
+                                            RotateAnimatedText(eMap.value
+                                                    .usersPlayed.isNotEmpty
+                                                ? "${eMap.value.usersPlayed.length} played this game"
+                                                : eMap.value.lang == Lang.tamil
+                                                    ? noOnePlayedTamil[
+                                                        Random().nextInt(2)]
+                                                    : noOnePlayedEng[
+                                                        Random().nextInt(2)]),
+                                            RotateAnimatedText(
+                                                '${eMap.value.usersFound.length} found this game'),
+                                          ],
+                                          isRepeatingAnimation: false,
+                                          repeatForever: false,
+                                          pause: Duration(
+                                              milliseconds: Random().nextBool()
+                                                  ? 200
+                                                  : 500),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                      ),
+                    );
+            }).toList(),
+          );
+        },
+      ).toList(),
     );
   }
 }
 
-class TodayMovieList extends ConsumerWidget {
-  final bool isPortrait;
-  const TodayMovieList({Key? key, this.isPortrait = false}) : super(key: key);
+class CarouselTodayMovieTile extends ConsumerWidget {
+  final MapEntry<String, Movie> mEntry;
+  const CarouselTodayMovieTile(this.mEntry, {Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final String user = ref.watch(firebaseUserProvider).uid;
-    return FirebaseAnimatedList(
-      query: ref.watch(todayMoviesProvider),
-      scrollDirection: isPortrait ? Axis.horizontal : Axis.vertical,
-      itemBuilder: (BuildContext context, DataSnapshot snapshot,
-          Animation<double> animation, int index) {
-        Map map = snapshot.value as Map;
-        final String id = snapshot.key ?? "";
-        Map<String, dynamic> json = Map<String, dynamic>.from(map);
-        Movie m = Movie.fromJson(json);
+    final size = MediaQuery.of(context).size;
+    final User user = ref.watch(firebaseUserProvider);
 
-        return InkWell(
-          onTap: m.usersFound.contains(user)
-              ? () => ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        "Already Found",
-                        style: GoogleFonts.poppins(),
+    final Movie iMovie = ref
+        .watch(movieProvider(mEntry.key))
+        .maybeWhen(orElse: () => mEntry.value, data: (m) => m);
+
+    final bool alreadyFound = iMovie.usersFound.contains(user.uid);
+
+    final landScapeImageUrl =
+        ref.watch(moviePosterLandscapeProvider(mEntry.key)).maybeWhen(
+              orElse: () => "",
+              data: (url) => url,
+            );
+
+    final portraitImageUrl =
+        ref.watch(moviePosterProvider(mEntry.key)).maybeWhen(
+              orElse: () => "",
+              data: (url) => url,
+            );
+
+    return Card(
+      color: Colors.grey.shade600,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 500),
+        child: alreadyFound
+            ? landScapeImageUrl.isEmpty
+                ? Container()
+                : GridTile(
+                    footer: Container(
+                      height: size.height * 0.075,
+                      color: Colors.transparent.withOpacity(0.5),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: size.width * 0.02),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            flex: 2,
+                            child: AutoSizeText(
+                              "${iMovie.name.capitalize} (${iMovie.releasedOn})",
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          Flexible(
+                            child: TextButton(
+                              onPressed: () => showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (_) => MovieInfoDialog(
+                                  id: mEntry.key,
+                                  iMovie: iMovie,
+                                  portraitImageUrl: portraitImageUrl,
+                                  landScapeImageUrl: landScapeImageUrl,
+                                ),
+                              ),
+                              child: const Text("view"),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        image: DecorationImage(
+                          image: CachedNetworkImageProvider(landScapeImageUrl),
+                          fit: BoxFit.fill,
+                        ),
                       ),
                     ),
                   )
-              : () {
-                  ref.read(movieIdProvider.notifier).state = id;
-                  context.router.push(GameRoute(movie: m));
+            : InkWell(
+                onTap: () {
+                  ref.read(movieIdProvider.notifier).state = mEntry.key;
+                  context.router.push(GameRoute(movie: iMovie));
                 },
-          child: TodayMovieTile(id, movie: m),
-        );
-      },
+                child: Center(
+                  child: ListTile(
+                    title: Text(
+                      mEntry.value.lang.name.capitalize,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: size.shortestSide * 0.1),
+                    ),
+                    subtitle: SizedBox(
+                      height: size.height * 0.07,
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          RotateAnimatedText(iMovie.usersPlayed.isNotEmpty
+                              ? "${iMovie.usersPlayed.length} played this game"
+                              : mEntry.value.lang == Lang.tamil
+                                  ? noOnePlayedTamil[Random().nextInt(2)]
+                                  : noOnePlayedEng[Random().nextInt(2)]),
+                          RotateAnimatedText(
+                              '${iMovie.usersFound.length} found this game'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+      ),
     );
   }
 }
 
-class TodayMovieText extends StatelessWidget {
-  const TodayMovieText({Key? key}) : super(key: key);
+class MovieInfoDialog extends ConsumerWidget {
+  const MovieInfoDialog({
+    Key? key,
+    required this.id,
+    required this.iMovie,
+    required this.portraitImageUrl,
+    required this.landScapeImageUrl,
+  }) : super(key: key);
+
+  final String id;
+  final Movie iMovie;
+  final String portraitImageUrl;
+  final String landScapeImageUrl;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final Size size = MediaQuery.of(context).size;
+
+    final orientation = MediaQuery.of(context).orientation;
+
+    final user = ref.watch(firebaseUserProvider);
+
+    final Player? player = ref.watch(playerProvider(user.uid)).when(
+          data: (data) => data,
+          error: (e, s) => null,
+          loading: () => null,
+        );
+
+    return AlertDialog(
+      contentPadding: EdgeInsets.zero,
+      content: SizedBox(
+        height: size.height,
+        width: size.width,
+        child: GridTile(
+          footer: FadeInUp(
+            child: Container(
+              height: orientation == Orientation.portrait
+                  ? size.height * 0.15
+                  : size.height * 0.25,
+              color: Colors.transparent.withOpacity(0.5),
+              padding: orientation == Orientation.portrait
+                  ? EdgeInsets.all(size.width * 0.04)
+                  : EdgeInsets.all(size.height * 0.02),
+              //alignment: Alignment.centerLeft,
+              child: FadeInRight(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Flexible(
+                      flex: 4,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          Flexible(
+                            flex: 2,
+                            child: AutoSizeText(
+                              "${iMovie.name.capitalize} (${iMovie.releasedOn})",
+                              style: const TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                          if (player != null)
+                            Flexible(
+                              flex: 2,
+                              child: AutoSizeText(
+                                "Your score: ${player.rounds[id] ?? 1}/ 5",
+                                style: const TextStyle(color: Colors.white54),
+                              ),
+                            ),
+                          Flexible(
+                            child: AutoSizeText(
+                              "${iMovie.usersFound.length} found this movie",
+                              style: TextStyle(
+                                  color: Colors.white38,
+                                  fontSize: size.width * 0.02),
+                            ),
+                          )
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const AutoSizeText("SHARE", maxLines: 1),
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+          child: Container(
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: NetworkImage(orientation == Orientation.portrait
+                    ? portraitImageUrl
+                    : landScapeImageUrl),
+                fit: BoxFit.cover,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class DashboardHeader extends ConsumerWidget {
+  const DashboardHeader({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final size = MediaQuery.of(context).size;
+    final User user = ref.watch(firebaseUserProvider);
+
+    final Player? player = ref.watch(playerProvider(user.uid)).when(
+          data: (data) => data,
+          error: (e, s) => null,
+          loading: () => null,
+        );
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 500),
+      child: player == null
+          ? Container()
+          : FadeInDown(
+              child: ListTile(
+                title: Row(
+                  children: [
+                    Flexible(
+                        flex: 2,
+                        child: Text(
+                          "Hi ${player.name}",
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontWeight: FontWeight.bold,
+                            fontSize: size.shortestSide * 0.05,
+                          ),
+                        )),
+                    Flexible(
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          "EDIT",
+                          style: TextStyle(color: Colors.blue),
+                        ),
+                      ),
+                    )
+                  ],
+                ),
+                subtitle: Text(
+                  "Start guessing today's movies",
+                  style: TextStyle(
+                    fontSize: size.shortestSide * 0.025,
+                    color: Colors.white54,
+                  ),
+                ),
+                trailing: Text(
+                  "PICOFILM",
+                  style: GoogleFonts.luckiestGuy(
+                    fontSize: size.shortestSide * 0.07,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+            ),
+    );
+  }
+}
+
+class DashboardLandscape extends StatelessWidget {
+  const DashboardLandscape({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final Size size = MediaQuery.of(context).size;
-    final double highest = size.width > size.height ? size.width : size.height;
-
-    return Text(
-      "Today's movies",
-      style: GoogleFonts.poppins(
-        fontSize: highest * 0.02,
-        color: Colors.white70,
-      ),
+    return Column(
+      children: const [
+        Flexible(
+          fit: FlexFit.tight,
+          child: DashboardHeader(),
+        ),
+        Flexible(
+          flex: 4,
+          child: LangMovies(),
+        ),
+      ],
     );
   }
 }

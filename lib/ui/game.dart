@@ -269,7 +269,7 @@ class GameTextField extends ConsumerWidget {
                     : remainingChances == -1
                         ? "Better luck next time. It's ${movie.name.capitalize}"
                         : remainingChances == 4
-                            ? "Guess the movie.."
+                            ? "Guess the ${movie.lang.name} movie.."
                             : remainingChances == 0
                                 ? "You have last chance"
                                 : "$remainingChances more chances to go",
@@ -340,7 +340,7 @@ class GameButtons extends ConsumerWidget {
                       .watch(selectedImageIndexProvider(movieId).notifier)
                       .state--;
                 },
-          child: Text("Previous", style: GoogleFonts.poppins()),
+          child: Text("Prev. Image", style: GoogleFonts.poppins()),
         ),
         TextButton(
           onPressed: selectedRound == 4
@@ -356,7 +356,7 @@ class GameButtons extends ConsumerWidget {
                       .state++;
                 },
           child: Text(
-            "Next One",
+            "Next Image",
             style: GoogleFonts.poppins(),
           ),
         ),

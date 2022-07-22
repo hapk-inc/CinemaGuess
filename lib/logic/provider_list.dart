@@ -94,6 +94,13 @@ final FutureProviderFamily<Map, Lang> langMoviesProvider =
   },
 );
 
+final FutureProvider<Map<String, Movie>> allMoviesProvider = FutureProvider(
+  (ref) {
+    final movieDatabase = ref.read(movieDatabaseProvider);
+    return movieDatabase.allMovies;
+  },
+);
+
 final StreamProviderFamily<Movie, String> movieProvider =
     StreamProvider.family<Movie, String>(
   (ref, id) {
