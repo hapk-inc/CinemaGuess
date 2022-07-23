@@ -2,7 +2,8 @@ import 'package:cinema_guess/logic/provider_list.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:share_plus/share_plus.dart';
+
+//import 'package:share_plus/share_plus.dart';
 
 import '../logic/caps.dart';
 import '../logic/models/movie.dart';
@@ -78,8 +79,8 @@ class InfoDialogPage extends ConsumerWidget {
         ),*/
         TextButton(
           onPressed: () {
-            Share.share(
-                'Check out my website https://cinemaguess-hapk.web.app/');
+            /*  Share.share(
+                'Check out my website https://cinemaguess-hapk.web.app/');*/
           },
           child: Text(
             "Share",

@@ -34,9 +34,8 @@ class _$MyRoute extends RootStackRouter {
           routeData: routeData, child: const DashboardPage());
     },
     GameRoute.name: (routeData) {
-      final args = routeData.argsAs<GameRouteArgs>();
       return MaterialPageX<dynamic>(
-          routeData: routeData, child: GamePage(args.movie, key: args.key));
+          routeData: routeData, child: const GamePage());
     }
   };
 
@@ -87,23 +86,8 @@ class DashboardRoute extends PageRouteInfo<void> {
 
 /// generated route for
 /// [GamePage]
-class GameRoute extends PageRouteInfo<GameRouteArgs> {
-  GameRoute({required Movie movie, Key? key})
-      : super(GameRoute.name,
-            path: 'game', args: GameRouteArgs(movie: movie, key: key));
+class GameRoute extends PageRouteInfo<void> {
+  const GameRoute() : super(GameRoute.name, path: 'game');
 
   static const String name = 'GameRoute';
-}
-
-class GameRouteArgs {
-  const GameRouteArgs({required this.movie, this.key});
-
-  final Movie movie;
-
-  final Key? key;
-
-  @override
-  String toString() {
-    return 'GameRouteArgs{movie: $movie, key: $key}';
-  }
 }

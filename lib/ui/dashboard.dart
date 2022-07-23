@@ -11,6 +11,7 @@ import 'package:cinema_guess/logic/provider_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_share/flutter_share.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 
@@ -34,7 +35,10 @@ class DashboardPage extends ConsumerWidget {
         child: ref.watch(allMoviesProvider).maybeWhen(
             orElse: () => Center(
                   child: DefaultTextStyle(
-                    style: GoogleFonts.poppins(fontSize: 20),
+                    style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      color: Colors.grey,
+                    ),
                     child: AnimatedTextKit(
                       animatedTexts: [WavyAnimatedText('Loading all movies')],
                       isRepeatingAnimation: true,
@@ -230,7 +234,7 @@ class AllMovieTileLandscape extends ConsumerWidget {
               : InkWell(
                   onTap: () {
                     ref.read(movieIdProvider.notifier).state = id;
-                    context.router.push(GameRoute(movie: iMovie));
+                    context.router.push(const GameRoute());
                   },
                   child: Padding(
                     padding: EdgeInsets.all(size.shortestSide * 0.01),
@@ -413,9 +417,9 @@ class LangMoviesPortrait extends ConsumerWidget {
                                               size.shortestSide * 0.01),
                                           decoration: BoxDecoration(
                                             image: DecorationImage(
-                                              image: NetworkImage(
+                                              image: CachedNetworkImageProvider(
                                                   portraitImageUrl),
-                                              fit: BoxFit.fitWidth,
+                                              fit: BoxFit.cover,
                                             ),
                                           ),
                                         ),
@@ -425,8 +429,7 @@ class LangMoviesPortrait extends ConsumerWidget {
                                 onTap: () {
                                   ref.read(movieIdProvider.notifier).state =
                                       eMap.key;
-                                  context.router
-                                      .push(GameRoute(movie: eMap.value));
+                                  context.router.push(GameRoute());
                                 },
                                 child: Padding(
                                   padding:
@@ -568,7 +571,7 @@ class CarouselTodayMovieTile extends ConsumerWidget {
                       decoration: BoxDecoration(
                         image: DecorationImage(
                           image: CachedNetworkImageProvider(landScapeImageUrl),
-                          fit: BoxFit.fill,
+                          fit: BoxFit.cover,
                         ),
                       ),
                     ),
@@ -576,7 +579,7 @@ class CarouselTodayMovieTile extends ConsumerWidget {
             : InkWell(
                 onTap: () {
                   ref.read(movieIdProvider.notifier).state = mEntry.key;
-                  context.router.push(GameRoute(movie: iMovie));
+                  context.router.push(GameRoute());
                 },
                 child: Center(
                   child: ListTile(
@@ -689,7 +692,24 @@ class MovieInfoDialog extends ConsumerWidget {
                     ),
                     Flexible(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () async {
+                          String str = player?.rounds[id] == 6
+                              ? "❌❌❌❌❌"
+                              : List.generate(
+                                  player?.rounds[id] ?? 1,
+                                  (index) =>
+                                      index == ((player?.rounds[id] ?? 1) - 1)
+                                          ? "✅"
+                                          : "❌").join();
+                          await FlutterShare.share(
+                            text:
+                                'On ${iMovie.postedOn} / ${iMovie.lang.name.capitalize} \n\n$str\n${iMovie.usersFound.length} found this movie',
+                            title: 'CinemaGuess',
+                            //linkUrl: 'https://flutter.dev/',
+                            linkUrl: 'https://cinemaguess-hapk.web.app/',
+                            //chooserTitle: 'Example Chooser Title',
+                          );
+                        },
                         child: const AutoSizeText("SHARE", maxLines: 1),
                       ),
                     )
@@ -701,9 +721,10 @@ class MovieInfoDialog extends ConsumerWidget {
           child: Container(
             decoration: BoxDecoration(
               image: DecorationImage(
-                image: NetworkImage(orientation == Orientation.portrait
-                    ? portraitImageUrl
-                    : landScapeImageUrl),
+                image: CachedNetworkImageProvider(
+                    orientation == Orientation.portrait
+                        ? portraitImageUrl
+                        : landScapeImageUrl),
                 fit: BoxFit.cover,
               ),
             ),
