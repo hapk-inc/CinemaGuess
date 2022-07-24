@@ -60,7 +60,7 @@ class DefaultFirebaseOptions {
           storageBucket: "cinemaguess-hapk.appspot.com",
           messagingSenderId: "250391001271",
           appId: "1:250391001271:web:aa9342fc12e6a6d3c07532",
-          databaseURL: 'https://cinemaguess-hapk-default-rtdb.firebaseio.com/',
+          databaseURL: 'https://cinemaguess-hapk-default-rtdb.firebaseio.com',
           measurementId: "G-XTTZW5D720");
 
   static const FirebaseOptions android = FirebaseOptions(

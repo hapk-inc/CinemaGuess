@@ -24,7 +24,11 @@ final storageProvider = Provider<FirebaseStorage>(
 final Provider<FirebaseDatabase> databaseProvider = Provider<FirebaseDatabase>(
   (ref) {
     final app = ref.read(firebaseAppProvider);
-    return FirebaseDatabase.instanceFor(app: app);
+    print("27-->");
+    print(app.options.databaseURL);
+    return FirebaseDatabase.instanceFor(
+        app: app,
+        databaseURL: 'https://cinemaguess-hapk-default-rtdb.firebaseio.com');
   },
 );
 
@@ -95,7 +99,8 @@ final FutureProviderFamily<Map, Lang> langMoviesProvider =
 );
 
 final FutureProvider<Map<String, Movie>> allMoviesProvider = FutureProvider(
-  (ref) {
+  (ref) async {
+    print("AllMoviesProvider--103");
     final movieDatabase = ref.read(movieDatabaseProvider);
     return movieDatabase.allMovies;
   },

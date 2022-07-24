@@ -25,6 +25,12 @@ class _$MyRoute extends RootStackRouter {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const SplashPage());
     },
+    ErrorRoute.name: (routeData) {
+      final args = routeData.argsAs<ErrorRouteArgs>();
+      return MaterialPageX<dynamic>(
+          routeData: routeData,
+          child: ErrorPage(key: args.key, e: args.e, trace: args.trace));
+    },
     AppStackRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const AppStackPage());
@@ -43,6 +49,7 @@ class _$MyRoute extends RootStackRouter {
   List<RouteConfig> get routes => [
         RouteConfig(WelcomeRoute.name, path: '/welcome-page'),
         RouteConfig(SplashRoute.name, path: '/splash-page'),
+        RouteConfig(ErrorRoute.name, path: '/error-page'),
         RouteConfig(AppStackRoute.name, path: '/', children: [
           RouteConfig(DashboardRoute.name,
               path: '', parent: AppStackRoute.name),
@@ -65,6 +72,32 @@ class SplashRoute extends PageRouteInfo<void> {
   const SplashRoute() : super(SplashRoute.name, path: '/splash-page');
 
   static const String name = 'SplashRoute';
+}
+
+/// generated route for
+/// [ErrorPage]
+class ErrorRoute extends PageRouteInfo<ErrorRouteArgs> {
+  ErrorRoute({Key? key, required Object e, required StackTrace trace})
+      : super(ErrorRoute.name,
+            path: '/error-page',
+            args: ErrorRouteArgs(key: key, e: e, trace: trace));
+
+  static const String name = 'ErrorRoute';
+}
+
+class ErrorRouteArgs {
+  const ErrorRouteArgs({this.key, required this.e, required this.trace});
+
+  final Key? key;
+
+  final Object e;
+
+  final StackTrace trace;
+
+  @override
+  String toString() {
+    return 'ErrorRouteArgs{key: $key, e: $e, trace: $trace}';
+  }
 }
 
 /// generated route for

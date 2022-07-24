@@ -1,6 +1,7 @@
 import 'package:cinema_guess/logic/movie_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'models/player.dart';
@@ -13,6 +14,9 @@ class Auth {
 
   Auth(this.read) {
     _auth = FirebaseAuth.instanceFor(app: read(firebaseAppProvider));
+    if (kIsWeb) {
+      _auth.setPersistence(Persistence.SESSION);
+    }
     usersRef = read(databaseProvider).ref().child('users');
   }
 

@@ -49,3 +49,15 @@ class SplashPage extends StatelessWidget {
     );
   }
 }
+
+class ErrorPage extends StatelessWidget {
+  final Object e;
+  final StackTrace trace;
+  const ErrorPage({Key? key, required this.e, required this.trace})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(body: Center(child: Text(trace.toString())));
+  }
+}

@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
-import '../logic/models/movie.dart';
 import '../main.dart';
 import '../ui/dashboard.dart';
 import '../ui/game.dart';
@@ -15,6 +14,7 @@ part 'my_route.gr.dart';
   routes: <AutoRoute>[
     AutoRoute(page: WelcomePage),
     AutoRoute(page: SplashPage),
+    AutoRoute(page: ErrorPage),
     AutoRoute(
       page: AppStackPage,
       path: '/',
