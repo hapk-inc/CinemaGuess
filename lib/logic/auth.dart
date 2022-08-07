@@ -1,8 +1,8 @@
-import 'package:cinema_guess/logic/movie_database.dart';
+import 'package:PicoFilm/logic/movie_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:rxdart/rxdart.dart';
 
 import 'models/player.dart';
 import 'provider_list.dart';
@@ -13,15 +13,27 @@ class Auth {
   late DatabaseReference usersRef;
 
   Auth(this.read) {
-    _auth = FirebaseAuth.instanceFor(app: read(firebaseAppProvider));
+    print("16->AuthInit");
+    _auth = read(firebaseAuthProvider);
+    /* _auth = FirebaseAuth.instanceFor(app: read(firebaseAppProvider));
     if (kIsWeb) {
-      _auth.setPersistence(Persistence.SESSION);
-    }
+      _auth.setPersistence(Persistence.LOCAL);
+    }*/
     usersRef = read(databaseProvider).ref().child('users');
   }
 
-  Stream<bool> get userCheck =>
-      _auth.authStateChanges().map((event) => event != null);
+  Stream<bool> get userCheck {
+    late BehaviorSubject<bool> subject;
+    subject = BehaviorSubject<bool>(
+      onListen: () => _auth.authStateChanges().listen(
+        (event) {
+          print("30-->" "${event != null}");
+          subject.add(event != null);
+        },
+      ),
+    );
+    return subject.stream;
+  }
 
   User? get currentUser => _auth.currentUser;
 

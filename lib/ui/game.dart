@@ -1,24 +1,27 @@
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:cinema_guess/ui/dashboard.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 import '../logic/caps.dart';
 import '../logic/images_index.dart';
 import '../logic/models/language.dart';
 import '../logic/models/movie.dart';
+import '../logic/models/player.dart';
 import '../logic/provider_list.dart';
+import 'dialogs.dart';
+import 'utils/game_loader.dart';
+import 'utils/row_indicator.dart';
+import 'utils/you_mean_snack.dart';
 
-class GamePage extends ConsumerWidget {
+class GamePage extends StatelessWidget {
   const GamePage({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final orientation = MediaQuery.of(context).orientation;
     return Scaffold(
       backgroundColor: Colors.blue.shade50,
@@ -42,159 +45,295 @@ class GamePagePortrait extends ConsumerWidget {
     final size = MediaQuery.of(context).size;
     final int selectedRound = ref.watch(selectedImageIndexProvider(movieId));
 
+    final user = ref.watch(firebaseUserProvider);
+
+    final Player? player = ref.watch(playerProvider(user.uid)).when(
+          data: (data) => data,
+          error: (e, s) => null,
+          loading: () => null,
+        );
+
     final Movie? movie = ref
         .watch(movieProvider(movieId))
         .maybeWhen(orElse: () => null, data: (m) => m);
+
+    final portraitImageUrl = ref
+        .watch(moviePosterProvider(movieId))
+        .maybeWhen(orElse: () => "", data: (url) => url);
+
+    final landScapeImageUrl = ref
+        .watch(moviePosterLandscapeProvider(movieId))
+        .maybeWhen(orElse: () => "", data: (url) => url);
+
+    final int myRoundCount = ref.watch(myRoundCountProvider(movieId)).when(
+          loading: () => 0,
+          data: (value) => value,
+          error: (e, s) => 0,
+        );
+
+    ref.listen<int>(
+      myRoundCountProvider(movieId).select((value) => value.value ?? 0),
+      (prev, next) {
+        switch (next) {
+          case 6:
+            {
+              //context.router.pop();
+              showDialog(
+                context: context,
+                builder: (context) => MovieInfoDialog(
+                  id: movieId,
+                  iMovie: movie!,
+                  portraitImageUrl: portraitImageUrl,
+                  landScapeImageUrl: landScapeImageUrl,
+                  halfSize: true,
+                ),
+              );
+            }
+        }
+      },
+    );
 
     final textController = TextEditingController();
 
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 500),
       child: movie == null
-          ? Container(
-              alignment: Alignment.center,
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                "Do you watch Movies \nframe by frame,\nremember "
-                "the scenes still now?",
-                style: TextStyle(
-                  fontSize: size.shortestSide * 0.05,
-                  color: Colors.grey,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            )
-          : ref.watch(allCluesProvider(movieId)).when(
-                data: (urls) => Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Flexible(
-                      flex: 2,
-                      child: Padding(
-                        padding: EdgeInsets.all(16.0),
-                        child: RowIndicator(),
-                      ),
-                    ),
-                    Flexible(
-                      flex: 4,
-                      child: FractionallySizedBox(
-                        widthFactor: 1,
-                        heightFactor: 1,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 500),
-                            child: CachedNetworkImage(
-                              imageUrl: urls[selectedRound],
-                              key: ValueKey(selectedRound),
-                              fit: BoxFit.contain,
-                              placeholder: (ctx, __) => DefaultTextStyle(
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.blue.shade800,
-                                ),
-                                child: AnimatedTextKit(
-                                  animatedTexts: [
-                                    FadeAnimatedText('Loading image')
-                                  ],
-                                  isRepeatingAnimation: true,
+          ? const GamePageLoader()
+          : Column(
+              children: [
+                Flexible(
+                  flex: 19,
+                  child: ref.watch(allCluesProvider(movieId)).when(
+                        data: (urls) => Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Flexible(
+                              flex: 2,
+                              child: Padding(
+                                padding: EdgeInsets.all(16.0),
+                                child: RowIndicator(),
+                              ),
+                            ),
+                            Flexible(
+                              flex: 4,
+                              child: FractionallySizedBox(
+                                widthFactor: 1,
+                                heightFactor: 1,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0),
+                                  child: AnimatedSwitcher(
+                                    duration: const Duration(milliseconds: 500),
+                                    child: selectedRound == 5
+                                        ? Container()
+                                        : CachedNetworkImage(
+                                            imageUrl: urls[selectedRound],
+                                            key: ValueKey(selectedRound),
+                                            fit: BoxFit.contain,
+                                            placeholder: (ctx, __) =>
+                                                DefaultTextStyle(
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 14,
+                                                color: Colors.grey,
+                                              ),
+                                              child: AnimatedTextKit(
+                                                animatedTexts: [
+                                                  FadeAnimatedText(
+                                                      'Loading image')
+                                                ],
+                                                isRepeatingAnimation: true,
+                                              ),
+                                            ),
+                                            errorWidget: (_, __, ___) =>
+                                                const Center(
+                                              child: Text("Error :("),
+                                            ),
+                                          ),
+                                  ),
                                 ),
                               ),
-                              errorWidget: (_, __, ___) =>
-                                  const Center(child: Text("Error :(")),
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    Flexible(
-                        flex: 2,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                          child: TextField(
-                            autofocus: true,
-                            controller: textController,
-                            autocorrect: movie.lang == Lang.english,
-                            cursorHeight: size.shortestSide * 0.07,
-                            onChanged: (name) {
-                              if (movie.suggestions
-                                  .contains(name.toLowerCase())) {
-                                ScaffoldMessenger.of(context)
-                                    .showSnackBar(
-                                      SnackBar(
-                                        elevation: 4,
-                                        content: Text(
-                                          "You mean ${movie.name.capitalize}",
-                                          style: GoogleFonts.poppins(
-                                              color: Colors.grey),
+                            Flexible(
+                              flex: 2,
+                              child: Container(
+                                alignment: Alignment.centerLeft,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 24.0),
+                                child: myRoundCount == 6
+                                    ? Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Flexible(
+                                            flex: 2,
+                                            child: AutoSizeText(
+                                              "${movie.name.capitalize} (${movie.releasedOn})",
+                                              style: TextStyle(
+                                                  color: Colors.black87,
+                                                  fontSize: size.width * 0.7),
+                                              maxLines: 1,
+                                            ),
+                                          ),
+                                          Flexible(
+                                            child: AutoSizeText(
+                                              "${movie.usersFound.length} found this movie",
+                                              style: TextStyle(
+                                                  color: Colors.black26,
+                                                  fontSize: size.width * 0.05),
+                                            ),
+                                          )
+                                        ],
+                                      )
+                                    : TextField(
+                                        autofocus: true,
+                                        controller: textController,
+                                        autocorrect: movie.lang == Lang.english,
+                                        cursorHeight: size.shortestSide * 0.07,
+                                        onChanged: (name) {
+                                          if (movie.suggestions
+                                              .contains(name.toLowerCase())) {
+                                            ScaffoldMessenger.of(context)
+                                                .showSnackBar(
+                                                  SnackBar(
+                                                    elevation: 4,
+                                                    content: Text(
+                                                      "You mean ${movie.name.capitalize}",
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                              color:
+                                                                  Colors.grey),
+                                                    ),
+                                                    action: SnackBarAction(
+                                                      label: "Search",
+                                                      onPressed: () {
+                                                        ref.watch(
+                                                            updateFoundProvider);
+                                                        showDialog(
+                                                            context: context,
+                                                            builder: (_) =>
+                                                                MovieInfoDialog(
+                                                                  id: movieId,
+                                                                  iMovie: movie,
+                                                                  portraitImageUrl:
+                                                                      portraitImageUrl,
+                                                                  landScapeImageUrl:
+                                                                      landScapeImageUrl,
+                                                                  halfSize:
+                                                                      true,
+                                                                )).then(
+                                                            (value) => context
+                                                                .router
+                                                                .popTop());
+                                                      },
+                                                    ),
+                                                  ),
+                                                )
+                                                .closed
+                                                .then((value) =>
+                                                    ScaffoldMessenger.of(
+                                                            context)
+                                                        .clearSnackBars());
+                                          }
+                                        },
+                                        decoration: InputDecoration(
+                                          hintText:
+                                              "It's a ${movie.lang.name.capitalize} movie",
+                                          hintStyle: GoogleFonts.poppins(
+                                            fontSize: size.shortestSide * 0.04,
+                                            color: Colors.black38,
+                                          ),
+                                          suffixIcon: TextButton(
+                                            child: const Text(
+                                              'Skip',
+                                              style:
+                                                  TextStyle(color: Colors.grey),
+                                            ),
+                                            onPressed: () {
+                                              ref.watch(
+                                                  updateRoundProvider(movieId));
+                                              ref
+                                                  .watch(
+                                                      selectedImageIndexProvider(
+                                                              movieId)
+                                                          .notifier)
+                                                  .state = myRoundCount;
+                                            },
+                                          ),
+                                          suffix: InkWell(
+                                            onTap: () {
+                                              if (textController.text.isEmpty) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      "Enter something",
+                                                      style:
+                                                          GoogleFonts.poppins(),
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                if (movie.suggestions.contains(
+                                                        textController.text) ||
+                                                    movie.name.toLowerCase() ==
+                                                        textController.text
+                                                            .toLowerCase()) {
+                                                  ref.watch(
+                                                      updateFoundProvider);
+                                                  showDialog(
+                                                      context: context,
+                                                      builder: (_) =>
+                                                          MovieInfoDialog(
+                                                            id: movieId,
+                                                            iMovie: movie,
+                                                            portraitImageUrl:
+                                                                portraitImageUrl,
+                                                            landScapeImageUrl:
+                                                                landScapeImageUrl,
+                                                            halfSize: true,
+                                                          )).then((value) =>
+                                                      context.router.popTop());
+                                                } else {
+                                                  ref.watch(updateRoundProvider(
+                                                      movieId));
+                                                  ref
+                                                      .watch(
+                                                          selectedImageIndexProvider(
+                                                                  movieId)
+                                                              .notifier)
+                                                      .state = myRoundCount;
+                                                }
+                                              }
+                                            },
+                                            child: const Text(
+                                              "Search",
+                                              style:
+                                                  TextStyle(color: Colors.blue),
+                                            ),
+                                          ),
                                         ),
-                                        action: SnackBarAction(
-                                            label: "Search", onPressed: () {}),
                                       ),
-                                    )
-                                    .closed
-                                    .then((value) =>
-                                        ScaffoldMessenger.of(context)
-                                            .clearSnackBars());
-                                ;
-                              }
-                            },
-                            decoration: InputDecoration(
-                              hintText:
-                                  "It's a ${movie.lang.name.capitalize} movie",
-                              hintStyle: GoogleFonts.poppins(
-                                fontSize: size.shortestSide * 0.04,
-                                color: Colors.black38,
-                              ),
-                              suffix: TextButton(
-                                onPressed: () {
-                                  if (movie.suggestions
-                                          .contains(textController.text) ||
-                                      movie.name.toLowerCase().trim() ==
-                                          textController.text
-                                              .toLowerCase()
-                                              .trim()) {
-                                    final portraitImageUrl = ref
-                                        .watch(moviePosterProvider(movieId))
-                                        .maybeWhen(
-                                            orElse: () => "",
-                                            data: (url) => url);
-
-                                    final landScapeImageUrl = ref
-                                        .watch(moviePosterLandscapeProvider(
-                                            movieId))
-                                        .maybeWhen(
-                                            orElse: () => "",
-                                            data: (url) => url);
-                                    ref.watch(updateFoundProvider);
-                                    showDialog(
-                                        context: context,
-                                        builder: (_) => MovieInfoDialog(
-                                            id: movieId,
-                                            iMovie: movie,
-                                            portraitImageUrl: portraitImageUrl,
-                                            landScapeImageUrl:
-                                                landScapeImageUrl)).then(
-                                        (value) => context.router.popTop());
-                                  } else {
-                                    ref.watch(updateRoundProvider(movieId));
-                                  }
-                                },
-                                child: const Text("Search"),
                               ),
                             ),
-                          ),
-                        )),
-                  ],
+                          ],
+                        ),
+                        error: (e, s) => Container(),
+                        loading: () => const GamePageLoader(),
+                      ),
                 ),
-                error: (e, s) => Container(),
-                loading: () => Container(
-                  alignment: Alignment.center,
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                      "Do u watch movies frame by frame and remember the scenes still now?"),
-                ),
-              ),
+                Flexible(
+                    child: Container(
+                  padding: const EdgeInsets.all(8.0),
+                  alignment: Alignment.bottomRight,
+                  child: FittedBox(
+                    child: Text(
+                      movie.postedOn,
+                      style: GoogleFonts.poppins(color: Colors.grey.shade400),
+                    ),
+                  ),
+                ))
+              ],
+            ),
     );
   }
 }
@@ -204,7 +343,7 @@ class GamePageLandScape extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final movieId = ref.watch(movieIdProvider.notifier).state;
+    final String movieId = ref.watch(movieIdProvider..notifier);
     final Movie? movie = ref
         .watch(movieProvider(movieId))
         .maybeWhen(orElse: () => null, data: (m) => m);
@@ -217,7 +356,7 @@ class GamePageLandScape extends ConsumerWidget {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 500),
       child: movie == null
-          ? Container()
+          ? const GamePageLoader()
           : ref.watch(allCluesProvider(movieId)).maybeWhen(
                 orElse: () => Container(),
                 data: (urls) => Container(
@@ -254,13 +393,13 @@ class GamePageLandScape extends ConsumerWidget {
                                             data: (url) => url);
                                     ref.watch(updateFoundProvider);
                                     showDialog(
-                                        context: context,
-                                        builder: (_) => MovieInfoDialog(
-                                            id: movieId,
-                                            iMovie: movie,
-                                            portraitImageUrl: portraitImageUrl,
-                                            landScapeImageUrl:
-                                                landScapeImageUrl));
+                                      context: context,
+                                      builder: (_) => MovieInfoDialog(
+                                          id: movieId,
+                                          iMovie: movie,
+                                          portraitImageUrl: portraitImageUrl,
+                                          landScapeImageUrl: landScapeImageUrl),
+                                    );
                                   } else {
                                     ref.watch(updateRoundProvider(movieId));
                                   }
@@ -270,17 +409,7 @@ class GamePageLandScape extends ConsumerWidget {
                                       .contains(name.toLowerCase())) {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
-                                          SnackBar(
-                                            elevation: 4,
-                                            content: Text(
-                                              "You mean ${movie.name.capitalize}",
-                                              style: GoogleFonts.poppins(
-                                                  color: Colors.grey),
-                                            ),
-                                            action: SnackBarAction(
-                                                label: "Search",
-                                                onPressed: () {}),
-                                          ),
+                                          youMeanSnackBar(movie, context),
                                         )
                                         .closed
                                         .then((value) =>
@@ -395,54 +524,6 @@ class GamePageLandScape extends ConsumerWidget {
                   ),
                 ),
               ),
-    );
-  }
-}
-
-class RowIndicator extends ConsumerWidget {
-  const RowIndicator({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final User user = ref.watch(firebaseUserProvider);
-
-    final movieId = ref.watch(movieIdProvider..notifier);
-    final Movie? movie = ref
-        .watch(movieProvider(movieId))
-        .maybeWhen(orElse: () => null, data: (m) => m);
-
-    final int myRoundCount = ref.watch(myRoundCountProvider(movieId)).when(
-          loading: () => 0,
-          data: (value) => value,
-          error: (e, s) => 0,
-        );
-
-    final int selectedRound = ref.watch(selectedImageIndexProvider(movieId));
-
-    return StepProgressIndicator(
-      totalSteps: 5,
-      currentStep: myRoundCount,
-      size: 36,
-      selectedColor: Colors.black,
-      unselectedColor: Colors.grey,
-      customStep: (index, color, _) => InkWell(
-        onTap: () {
-          print("371--$index");
-          if (myRoundCount > index)
-            ref.watch(selectedImageIndexProvider(movieId).notifier).state =
-                index;
-        },
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 500),
-          color: color,
-          child: AnimatedSwitcher(
-            duration: const Duration(milliseconds: 500),
-            child: color == Colors.black
-                ? const Icon(Icons.check, color: Colors.white)
-                : const Icon(Icons.remove),
-          ),
-        ),
-      ),
     );
   }
 }

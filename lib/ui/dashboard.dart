@@ -1,26 +1,26 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:PicoFilm/logic/provider_list.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:cinema_guess/logic/provider_list.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 //import 'package:flutter_share/flutter_share.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../logic/caps.dart';
 import '../logic/models/language.dart';
 import '../logic/models/movie.dart';
 import '../logic/models/player.dart';
 import '../routes/my_route.dart';
+import 'dialogs.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({Key? key}) : super(key: key);
@@ -254,9 +254,9 @@ class AllMovieTileLandscape extends ConsumerWidget {
                         Flexible(
                           child: AutoSizeText(
                             movie.postedOn,
-                            minFontSize: 24,
-                            maxFontSize: 36,
-                            style: const TextStyle(color: Colors.white60),
+                            minFontSize: 16,
+                            maxFontSize: 32,
+                            style: const TextStyle(color: Colors.white54),
                             maxLines: 2,
                           ),
                         ),
@@ -266,9 +266,10 @@ class AllMovieTileLandscape extends ConsumerWidget {
                             child: AutoSizeText(
                               "Click here",
                               style: TextStyle(
-                                fontSize: size.shortestSide * 0.07,
+                                fontSize: size.shortestSide * 0.05,
                                 color: Colors.white60,
                               ),
+                              maxLines: 1,
                             ),
                           ),
                         ),
@@ -413,6 +414,7 @@ class LangMoviesPortrait extends ConsumerWidget {
                                                   portraitImageUrl,
                                               landScapeImageUrl:
                                                   landScapeImageUrl,
+                                              halfSize: true,
                                             ),
                                           ),
                                           child: const Text("VIEW"),
@@ -456,10 +458,10 @@ class LangMoviesPortrait extends ConsumerWidget {
                                       Flexible(
                                         child: AutoSizeText(
                                           eMap.value.postedOn,
-                                          minFontSize: 24,
-                                          maxFontSize: 36,
+                                          minFontSize: 16,
+                                          maxFontSize: 32,
                                           style: const TextStyle(
-                                            color: Colors.white60,
+                                            color: Colors.white54,
                                           ),
                                           maxLines: 2,
                                         ),
@@ -623,136 +625,6 @@ class CarouselTodayMovieTile extends ConsumerWidget {
   }
 }
 
-class MovieInfoDialog extends ConsumerWidget {
-  const MovieInfoDialog({
-    Key? key,
-    required this.id,
-    required this.iMovie,
-    required this.portraitImageUrl,
-    required this.landScapeImageUrl,
-  }) : super(key: key);
-
-  final String id;
-  final Movie iMovie;
-  final String portraitImageUrl;
-  final String landScapeImageUrl;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final Size size = MediaQuery.of(context).size;
-
-    final orientation = MediaQuery.of(context).orientation;
-
-    final user = ref.watch(firebaseUserProvider);
-
-    final Player? player = ref.watch(playerProvider(user.uid)).when(
-          data: (data) => data,
-          error: (e, s) => null,
-          loading: () => null,
-        );
-
-    final int myRoundCount = ref.watch(myRoundCountProvider(id)).when(
-          loading: () => 0,
-          data: (value) => value,
-          error: (e, s) => 0,
-        );
-
-    return AlertDialog(
-      contentPadding: EdgeInsets.zero,
-      content: SizedBox(
-        height: size.height,
-        width: size.width,
-        child: GridTile(
-          footer: FadeInUp(
-            child: Container(
-              height: orientation == Orientation.portrait
-                  ? size.height * 0.15
-                  : size.height * 0.25,
-              color: Colors.transparent.withOpacity(0.5),
-              padding: orientation == Orientation.portrait
-                  ? EdgeInsets.all(size.width * 0.04)
-                  : EdgeInsets.all(size.height * 0.02),
-              //alignment: Alignment.centerLeft,
-              child: FadeInRight(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Flexible(
-                      flex: 4,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Flexible(
-                            flex: 2,
-                            child: AutoSizeText(
-                              "${iMovie.name.capitalize} (${iMovie.releasedOn})",
-                              style: const TextStyle(color: Colors.white70),
-                            ),
-                          ),
-                          if (player != null)
-                            Flexible(
-                              flex: 2,
-                              child: AutoSizeText(
-                                "Your score: $myRoundCount/ 5",
-                                style: const TextStyle(color: Colors.white54),
-                              ),
-                            ),
-                          Flexible(
-                            child: AutoSizeText(
-                              "${iMovie.usersFound.length} found this movie",
-                              style: TextStyle(
-                                  color: Colors.white38,
-                                  fontSize: size.width * 0.02),
-                            ),
-                          )
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: TextButton(
-                        onPressed: () async {
-                          String str = myRoundCount == 6
-                              ? "❌❌❌❌❌"
-                              : List.generate(
-                                  myRoundCount ?? 1,
-                                  (index) => index == (myRoundCount - 1)
-                                      ? "✅"
-                                      : "❌").join();
-                          await Share.share(
-                            'On ${iMovie.postedOn} / ${iMovie.lang.name.capitalize} \n\n$str\n${iMovie.usersFound.length} found this movie \n '
-                            'https://cinemaguess-hapk.web.app/',
-                            //title: 'CinemaGuess',
-                            //linkUrl: 'https://flutter.dev/',
-                            //linkUrl: 'https://cinemaguess-hapk.web.app/',
-                            //chooserTitle: 'Example Chooser Title',
-                          );
-                        },
-                        child: const AutoSizeText("SHARE", maxLines: 1),
-                      ),
-                    )
-                  ],
-                ),
-              ),
-            ),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: CachedNetworkImageProvider(
-                    orientation == Orientation.portrait
-                        ? portraitImageUrl
-                        : landScapeImageUrl),
-                fit: BoxFit.cover,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class DashboardHeader extends ConsumerWidget {
   const DashboardHeader({Key? key}) : super(key: key);
 
@@ -776,15 +648,16 @@ class DashboardHeader extends ConsumerWidget {
                 title: Row(
                   children: [
                     Flexible(
-                        flex: 2,
-                        child: Text(
-                          "Hi ${player.name}",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontWeight: FontWeight.bold,
-                            fontSize: size.shortestSide * 0.05,
-                          ),
-                        )),
+                      flex: 2,
+                      child: Text(
+                        "Hi ${player.name}",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontWeight: FontWeight.bold,
+                          fontSize: size.shortestSide * 0.05,
+                        ),
+                      ),
+                    ),
                     Flexible(
                       child: TextButton(
                         onPressed: () {},

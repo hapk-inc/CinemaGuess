@@ -14,6 +14,10 @@ final firebaseAppProvider = Provider<FirebaseApp>(
   (_) => throw UnimplementedError(),
 );
 
+final firebaseAuthProvider = Provider<FirebaseAuth>(
+  (_) => throw UnimplementedError(),
+);
+
 final storageProvider = Provider<FirebaseStorage>(
   (ref) {
     final app = ref.read(firebaseAppProvider);
@@ -41,9 +45,7 @@ final Provider<User> firebaseUserProvider = Provider<User>(
   },
 );
 
-final Provider<Auth> authProvider = Provider<Auth>(
-  (ref) => Auth(ref.read),
-);
+final Provider<Auth> authProvider = Provider<Auth>((ref) => Auth(ref.read));
 
 final AutoDisposeFutureProviderFamily<Player, String> playerProvider =
     FutureProvider.autoDispose.family<Player, String>(

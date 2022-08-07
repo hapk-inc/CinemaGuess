@@ -83,8 +83,6 @@ class WelcomeNameTextField extends ConsumerWidget {
 
     return TextField(
       controller: controller,
-      //autofocus: true,
-
       decoration: InputDecoration(
         hintText: "Your name",
         hintStyle: GoogleFonts.poppins(
@@ -92,7 +90,18 @@ class WelcomeNameTextField extends ConsumerWidget {
           color: Colors.white24,
         ),
         suffix: InkWell(
-          onTap: () => ref.watch(anonymousProvider(controller.text)),
+          onTap: () {
+            if (controller.text.isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content:
+                      Text("Enter something", style: GoogleFonts.poppins()),
+                ),
+              );
+            } else {
+              ref.watch(anonymousProvider(controller.text));
+            }
+          },
           child: Text(
             "Submit",
             style: GoogleFonts.poppins(fontSize: highest * 0.02),
@@ -100,7 +109,17 @@ class WelcomeNameTextField extends ConsumerWidget {
         ),
       ),
       style: GoogleFonts.poppins(fontSize: highest * 0.03),
-      onSubmitted: (str) => ref.watch(anonymousProvider(str)),
+      onSubmitted: (str) {
+        if (str.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text("Enter something", style: GoogleFonts.poppins()),
+            ),
+          );
+        } else {
+          ref.watch(anonymousProvider(str));
+        }
+      },
     );
   }
 }
@@ -118,8 +137,11 @@ class AppLogoName extends StatelessWidget {
         size: highest * 0.2,
       ),
       title: Text(
-        "CinemaGuess",
-        style: GoogleFonts.prompt(fontSize: highest * 0.05),
+        "PICOFILM",
+        style: TextStyle(
+          fontSize: highest * 0.07,
+          fontFamily: 'LuckiestGuy',
+        ),
         textAlign: TextAlign.center,
       ),
     );
