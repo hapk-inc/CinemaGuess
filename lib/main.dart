@@ -1,4 +1,3 @@
-import 'package:PicoFilm/firebase_options.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -8,10 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../firebase_options.dart';
 import 'logic/provider_list.dart';
 import 'routes/my_route.dart';
-
-//import 'package:firebase_core/firebase_core.dart' as firebase;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,18 +19,21 @@ Future<void> main() async {
 
   final FirebaseAuth firebaseAuth = FirebaseAuth.instanceFor(app: app);
 
+  final FirebaseAnalytics analytics = FirebaseAnalytics.instanceFor(app: app);
+
   if (kIsWeb) {
     final User? currentUser = firebaseAuth.currentUser;
     if (currentUser != null) {
       await currentUser.reload();
     }
   }
-  //firebaseAuth.setPersistence(Persistence.LOCAL);
+
   runApp(
     ProviderScope(
       overrides: [
         firebaseAppProvider.overrideWithValue(app),
         firebaseAuthProvider.overrideWithValue(firebaseAuth),
+        analyticsProvider.overrideWithValue(analytics)
       ],
       child: const MyApp(),
     ),
@@ -43,10 +44,10 @@ final myRouter = MyRoute();
 
 class MyApp extends ConsumerWidget {
   const MyApp({Key? key}) : super(key: key);
-
+/*
   static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
   static FirebaseAnalyticsObserver observer =
-      FirebaseAnalyticsObserver(analytics: analytics);
+      FirebaseAnalyticsObserver(analytics: analytics);*/
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -68,7 +69,6 @@ class MyApp extends ConsumerWidget {
             ref.watch(userCheckProvider).when(
                   loading: () => const SplashRoute(),
                   error: (Object e, StackTrace? s) {
-                    print(e);
                     print(s);
                     return ErrorRoute(e: e, trace: s!);
                   },
@@ -77,7 +77,6 @@ class MyApp extends ConsumerWidget {
                 )
           ];
         },
-        //navigatorObservers: () => <NavigatorObserver>[observer],
       ),
     );
   }

@@ -1,6 +1,6 @@
-import 'package:PicoFilm/logic/caps.dart';
 import 'package:flutter/material.dart';
 
+import '../logic/caps.dart';
 import '../logic/models/language.dart';
 
 class ChooseLang extends StatelessWidget {

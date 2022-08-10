@@ -24,8 +24,8 @@ class SplashPage extends StatelessWidget {
             ),
             Flexible(
               child: Text(
-                "CinemaGuess",
-                style: GoogleFonts.poppins(
+                "PICOFILM",
+                style: GoogleFonts.luckiestGuy(
                   fontSize: highest * 0.05,
                   color: Colors.white54,
                   letterSpacing: 1,

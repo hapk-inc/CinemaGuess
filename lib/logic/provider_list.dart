@@ -1,3 +1,4 @@
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -18,6 +19,9 @@ final firebaseAuthProvider = Provider<FirebaseAuth>(
   (_) => throw UnimplementedError(),
 );
 
+final analyticsProvider =
+    Provider<FirebaseAnalytics>((_) => throw UnimplementedError());
+
 final storageProvider = Provider<FirebaseStorage>(
   (ref) {
     final app = ref.read(firebaseAppProvider);
@@ -28,8 +32,7 @@ final storageProvider = Provider<FirebaseStorage>(
 final Provider<FirebaseDatabase> databaseProvider = Provider<FirebaseDatabase>(
   (ref) {
     final app = ref.read(firebaseAppProvider);
-    print("27-->");
-    print(app.options.databaseURL);
+
     return FirebaseDatabase.instanceFor(
         app: app,
         databaseURL: 'https://cinemaguess-hapk-default-rtdb.firebaseio.com');
@@ -78,6 +81,14 @@ final AutoDisposeStreamProviderFamily<int, String> myRoundCountProvider =
   },
 );
 
+final AutoDisposeFutureProviderFamily<void, String> updateNameProvider =
+    FutureProvider.autoDispose.family<void, String>(
+  (ref, name) {
+    final auth = ref.read(authProvider);
+    return auth.updateName(name);
+  },
+);
+
 ///////////////////////
 
 final AutoDisposeProvider<MovieDatabase> movieDatabaseProvider =
@@ -102,7 +113,6 @@ final FutureProviderFamily<Map, Lang> langMoviesProvider =
 
 final FutureProvider<Map<String, Movie>> allMoviesProvider = FutureProvider(
   (ref) async {
-    print("AllMoviesProvider--103");
     final movieDatabase = ref.read(movieDatabaseProvider);
     return movieDatabase.allMovies;
   },

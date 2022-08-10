@@ -1,10 +1,8 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 import '../../logic/images_index.dart';
-import '../../logic/models/movie.dart';
 import '../../logic/provider_list.dart';
 
 class RowIndicator extends ConsumerWidget {
@@ -12,12 +10,7 @@ class RowIndicator extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final User user = ref.watch(firebaseUserProvider);
-
     final movieId = ref.watch(movieIdProvider..notifier);
-    final Movie? movie = ref
-        .watch(movieProvider(movieId))
-        .maybeWhen(orElse: () => null, data: (m) => m);
 
     final int myRoundCount = ref.watch(myRoundCountProvider(movieId)).when(
           loading: () => 0,

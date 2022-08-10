@@ -276,7 +276,9 @@ class _$_Movie implements _Movie {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$_MovieToJson(this);
+    return _$$_MovieToJson(
+      this,
+    );
   }
 }
 
@@ -294,21 +296,21 @@ abstract class _Movie implements Movie {
   factory _Movie.fromJson(Map<String, dynamic> json) = _$_Movie.fromJson;
 
   @override
-  Lang get lang => throw _privateConstructorUsedError;
+  Lang get lang;
   @override
-  String? get mCast => throw _privateConstructorUsedError;
+  String? get mCast;
   @override
-  List<String> get suggestions => throw _privateConstructorUsedError;
+  List<String> get suggestions;
   @override
-  String get name => throw _privateConstructorUsedError;
+  String get name;
   @override
-  num get releasedOn => throw _privateConstructorUsedError;
+  num get releasedOn;
   @override
-  String get postedOn => throw _privateConstructorUsedError;
+  String get postedOn;
   @override
-  List<String> get usersFound => throw _privateConstructorUsedError;
+  List<String> get usersFound;
   @override
-  List<String> get usersPlayed => throw _privateConstructorUsedError;
+  List<String> get usersPlayed;
   @override
   @JsonKey(ignore: true)
   _$$_MovieCopyWith<_$_Movie> get copyWith =>

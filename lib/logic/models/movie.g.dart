@@ -27,7 +27,7 @@ _$_Movie _$$_MovieFromJson(Map<String, dynamic> json) => _$_Movie(
     );
 
 Map<String, dynamic> _$$_MovieToJson(_$_Movie instance) => <String, dynamic>{
-      'lang': _$LangEnumMap[instance.lang],
+      'lang': _$LangEnumMap[instance.lang]!,
       'm_cast': instance.mCast,
       'suggestions': instance.suggestions,
       'name': instance.name,

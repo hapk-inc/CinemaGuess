@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:PicoFilm/logic/provider_list.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:auto_route/auto_route.dart';
@@ -19,6 +18,7 @@ import '../logic/caps.dart';
 import '../logic/models/language.dart';
 import '../logic/models/movie.dart';
 import '../logic/models/player.dart';
+import '../logic/provider_list.dart';
 import '../routes/my_route.dart';
 import 'dialogs.dart';
 
@@ -30,26 +30,30 @@ class DashboardPage extends ConsumerWidget {
     final orientation = MediaQuery.of(context).orientation;
     return Scaffold(
       backgroundColor: Colors.blue.shade900,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         child: AnimatedSwitcher(
           duration: const Duration(milliseconds: 500),
           child: ref.watch(allMoviesProvider).when(
-              error: (e, s) {
-                print("37-->Error");
-                print(e);
-                print(s);
-                return const Center(
-                    child: Text("Error while loading all movies"));
-              },
+              error: (e, s) =>
+                  const Center(child: Text("Error while loading all movies")),
               loading: () => Center(
                     child: DefaultTextStyle(
                       style: GoogleFonts.poppins(
                         fontSize: 20,
                         color: Colors.grey,
                       ),
-                      child: AnimatedTextKit(
-                        animatedTexts: [WavyAnimatedText('Loading all movies')],
-                        isRepeatingAnimation: true,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          AnimatedTextKit(
+                            animatedTexts: [WavyAnimatedText('Lo')],
+                            isRepeatingAnimation: true,
+                            repeatForever: true,
+                            pause: const Duration(seconds: 3),
+                          ),
+                          const Text("ading all movies")
+                        ],
                       ),
                     ),
                   ),
@@ -104,7 +108,20 @@ class DashboardPortrait extends ConsumerWidget {
                               element.value.postedOn == formatterNow)
                           .map((e) => CarouselTodayMovieTile(e))
                           .toList(),
-                      options: CarouselOptions(),
+                      options: CarouselOptions(
+                        height: MediaQuery.of(context).size.height,
+                        aspectRatio: 16 / 9,
+                        viewportFraction: 0.8,
+                        initialPage: 0,
+                        enableInfiniteScroll: true,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration:
+                            const Duration(milliseconds: 800),
+                        autoPlayCurve: Curves.easeIn,
+                        enlargeCenterPage: true,
+                        scrollDirection: Axis.horizontal,
+                      ),
                     ),
                   ),
                 ),
@@ -224,7 +241,7 @@ class AllMovieTileLandscape extends ConsumerWidget {
                                     portraitImageUrl: portraitImageUrl,
                                   ),
                                 ),
-                                child: const Text("VIEW"),
+                                child: const Text("View"),
                               ),
                             )
                           ],
@@ -286,9 +303,6 @@ class AllMovieTileLandscape extends ConsumerWidget {
                                       '${iMovie.usersFound.length} found this quiz'),
                                 ],
                                 pause: Duration(seconds: Random().nextInt(5)),
-                                onTap: () {
-                                  print("Tap Event");
-                                },
                               ),
                             ),
                           ),
@@ -335,8 +349,6 @@ class LangMoviesPortrait extends ConsumerWidget {
               langMovies[key] = value;
             }
           });
-
-          print(langMovies);
 
           final sorted = SplayTreeMap<String, Movie>.from(
             langMovies,
@@ -417,7 +429,7 @@ class LangMoviesPortrait extends ConsumerWidget {
                                               halfSize: true,
                                             ),
                                           ),
-                                          child: const Text("VIEW"),
+                                          child: const Text("View"),
                                         ),
                                       )
                                     ],
@@ -444,7 +456,7 @@ class LangMoviesPortrait extends ConsumerWidget {
                                 onTap: () {
                                   ref.read(movieIdProvider.notifier).state =
                                       eMap.key;
-                                  context.router.push(GameRoute());
+                                  context.router.push(const GameRoute());
                                 },
                                 child: Padding(
                                   padding:
@@ -562,21 +574,23 @@ class CarouselTodayMovieTile extends ConsumerWidget {
                             child: AutoSizeText(
                               "${iMovie.name.capitalize} (${iMovie.releasedOn})",
                               style: const TextStyle(color: Colors.white70),
+                              maxLines: 1,
                             ),
                           ),
                           Flexible(
                             child: TextButton(
                               onPressed: () => showDialog(
                                 context: context,
-                                barrierDismissible: false,
+                                //barrierDismissible: false,
                                 builder: (_) => MovieInfoDialog(
                                   id: mEntry.key,
+                                  halfSize: true,
                                   iMovie: iMovie,
                                   portraitImageUrl: portraitImageUrl,
                                   landScapeImageUrl: landScapeImageUrl,
                                 ),
                               ),
-                              child: const Text("view"),
+                              child: const Text("View"),
                             ),
                           )
                         ],
@@ -594,7 +608,7 @@ class CarouselTodayMovieTile extends ConsumerWidget {
             : InkWell(
                 onTap: () {
                   ref.read(movieIdProvider.notifier).state = mEntry.key;
-                  context.router.push(GameRoute());
+                  context.router.push(const GameRoute());
                 },
                 child: Center(
                   child: ListTile(
@@ -625,6 +639,8 @@ class CarouselTodayMovieTile extends ConsumerWidget {
   }
 }
 
+final nameController = TextEditingController();
+
 class DashboardHeader extends ConsumerWidget {
   const DashboardHeader({Key? key}) : super(key: key);
 
@@ -648,7 +664,6 @@ class DashboardHeader extends ConsumerWidget {
                 title: Row(
                   children: [
                     Flexible(
-                      flex: 2,
                       child: Text(
                         "Hi ${player.name}",
                         style: TextStyle(
@@ -660,29 +675,98 @@ class DashboardHeader extends ConsumerWidget {
                     ),
                     Flexible(
                       child: TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          "EDIT",
-                          style: TextStyle(color: Colors.blue),
+                        onPressed: () => showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: TextField(
+                              autofocus: true,
+                              controller: nameController,
+                              decoration: const InputDecoration(
+                                  hintText: "Your new name is.."),
+                            ),
+                            actions: ["UPDATE", "DISCARD"]
+                                .map(
+                                  (e) => e.contains("UPDATE")
+                                      ? ElevatedButton(
+                                          onPressed: () async {
+                                            ref.watch(updateNameProvider(
+                                                nameController.text));
+                                            Navigator.pop(context, true);
+                                          },
+                                          child: Text(e),
+                                        )
+                                      : TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(),
+                                          child: Text(e),
+                                        ),
+                                )
+                                .toList(),
+                          ),
+                        ).then((value) {
+                          if (value) {
+                            ref.refresh(playerProvider(user.uid));
+                          }
+                        }),
+                        child: AutoSizeText(
+                          "CHANGE",
+                          maxLines: 2,
+                          style: GoogleFonts.poppins(
+                            color: Colors.blueGrey,
+                            fontSize: size.width * 0.0025,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                    )
+                    ),
                   ],
                 ),
-                subtitle: Text(
-                  "Start guessing today's movies",
-                  style: TextStyle(
-                    fontSize: size.shortestSide * 0.025,
-                    color: Colors.white54,
+                subtitle: AutoSizeText.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(text: "Start guessing "),
+                      TextSpan(
+                        text: "today's ",
+                        style: TextStyle(
+                          fontSize: size.shortestSide * 0.04,
+                          color: Colors.white70,
+                        ),
+                      ),
+                      const TextSpan(text: "movies"),
+                    ],
+                    style: TextStyle(
+                      fontSize: size.shortestSide * 0.025,
+                      color: Colors.white54,
+                    ),
                   ),
+                  maxLines: 1,
                 ),
-                trailing: Text(
-                  "PICOFILM",
-                  style: GoogleFonts.luckiestGuy(
-                    fontSize: size.shortestSide * 0.07,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white70,
-                  ),
+                trailing: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    Flexible(
+                      flex: 2,
+                      child: AutoSizeText(
+                        "HAPK's",
+                        style: GoogleFonts.poppins(
+                          fontSize: size.shortestSide * 0.01,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white30,
+                        ),
+                      ),
+                    ),
+                    Flexible(
+                      flex: 3,
+                      child: AutoSizeText(
+                        "PICOFILM",
+                        style: GoogleFonts.luckiestGuy(
+                          fontSize: size.shortestSide * 0.07,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

@@ -1,9 +1,9 @@
-import 'package:PicoFilm/logic/movie_database.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../logic/movie_database.dart';
 import 'models/player.dart';
 import 'provider_list.dart';
 
@@ -13,12 +13,8 @@ class Auth {
   late DatabaseReference usersRef;
 
   Auth(this.read) {
-    print("16->AuthInit");
     _auth = read(firebaseAuthProvider);
-    /* _auth = FirebaseAuth.instanceFor(app: read(firebaseAppProvider));
-    if (kIsWeb) {
-      _auth.setPersistence(Persistence.LOCAL);
-    }*/
+
     usersRef = read(databaseProvider).ref().child('users');
   }
 
@@ -27,7 +23,6 @@ class Auth {
     subject = BehaviorSubject<bool>(
       onListen: () => _auth.authStateChanges().listen(
         (event) {
-          print("30-->" "${event != null}");
           subject.add(event != null);
         },
       ),
@@ -73,12 +68,17 @@ class Auth {
         .child(movieId)
         .runTransaction(
       (mutableData) {
-        print("mutableData $mutableData");
         if (mutableData == null) {
           MovieDatabase(read).updatePlayed(user, movieId);
         }
         return Transaction.success((mutableData as int? ?? 1) + 1);
       },
     );
+  }
+
+  Future updateName(String name) async {
+    final String user = _auth.currentUser?.uid ?? "";
+    await _auth.currentUser!.updateDisplayName(name);
+    return usersRef.child(user).update({"name": name});
   }
 }

@@ -39,6 +39,10 @@ class _$MyRoute extends RootStackRouter {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const DashboardPage());
     },
+    ProfileRoute.name: (routeData) {
+      return MaterialPageX<dynamic>(
+          routeData: routeData, child: const ProfilePage());
+    },
     GameRoute.name: (routeData) {
       return MaterialPageX<dynamic>(
           routeData: routeData, child: const GamePage());
@@ -53,6 +57,8 @@ class _$MyRoute extends RootStackRouter {
         RouteConfig(AppStackRoute.name, path: '/', children: [
           RouteConfig(DashboardRoute.name,
               path: '', parent: AppStackRoute.name),
+          RouteConfig(ProfileRoute.name,
+              path: 'profile', parent: AppStackRoute.name),
           RouteConfig(GameRoute.name, path: 'game', parent: AppStackRoute.name)
         ])
       ];
@@ -115,6 +121,14 @@ class DashboardRoute extends PageRouteInfo<void> {
   const DashboardRoute() : super(DashboardRoute.name, path: '');
 
   static const String name = 'DashboardRoute';
+}
+
+/// generated route for
+/// [ProfilePage]
+class ProfileRoute extends PageRouteInfo<void> {
+  const ProfileRoute() : super(ProfileRoute.name, path: 'profile');
+
+  static const String name = 'ProfileRoute';
 }
 
 /// generated route for

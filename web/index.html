@@ -18,24 +18,53 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Guess the movie">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="cinema_guess">
+  <meta name="apple-mobile-web-app-title" content="PicoFilm">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>cinema_guess</title>
+  <title>PicoFilm</title>
   <link rel="manifest" href="manifest.json">
 
   <script>
     // The value below is injected by flutter build, do not touch.
     var serviceWorkerVersion = null;
   </script>
+
+  <script src="https://www.gstatic.com/firebasejs/9.9.2/firebase-app-compat.js"></script>
+  <!-- If you enabled Analytics in your project, add the Firebase SDK for Analytics -->
+  <script src="https://www.gstatic.com/firebasejs/9.9.2/firebase-analytics-compat.js"></script>
+  <script>
+    var firebaseConfig = {
+      apiKey: "AIzaSyAnqcj1oym8663LyMUJl-DKHMaLPV4U4EI",
+      authDomain: "cinemaguess-hapk.firebaseapp.com",
+      databaseURL: "https://cinemaguess-hapk-default-rtdb.firebaseio.com",
+      projectId: "cinemaguess-hapk",
+      storageBucket: "cinemaguess-hapk.appspot.com",
+      messagingSenderId: "250391001271",
+      appId: "1:250391001271:web:aa9342fc12e6a6d3c07532",
+      measurementId: "G-XTTZW5D720"
+    };
+  // Initialize Firebase
+
+  firebase.initializeApp(firebaseConfig);
+  firebase.analytics();
+
+ <!-- const myTimeout = setTimeout(initFirebase, 5000);
+
+  function initFirebase() {
+     firebase.initializeApp(firebaseConfig);
+     firebase.analytics();
+  }
+-->
+</script>
+
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
 </head>

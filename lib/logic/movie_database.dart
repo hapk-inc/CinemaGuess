@@ -13,9 +13,7 @@ class MovieDatabase {
   late Reference storageRef;
 
   MovieDatabase(this.read) {
-    print("init->16");
     movieRef = read(databaseProvider).ref().child('movies');
-    print(movieRef.path);
 
     storageRef = read(storageProvider).ref();
   }
@@ -103,17 +101,13 @@ class MovieDatabase {
     return transactionResult.committed;
   }
 
-  Future<Map<String, Movie>> get allMovies async {
-    print("Running allMovies - 110");
-    try {
-      return await movieRef.once().then(
+  Future<Map<String, Movie>> get allMovies async => await movieRef.once().then(
         (DatabaseEvent event) {
           final snapshot = event.snapshot;
-          print(snapshot.value);
+
           Map movies = snapshot.value as Map;
           movies.updateAll(
             (key, value) {
-              print(value);
               Map m = value;
               Map<String, dynamic> json = Map<String, dynamic>.from(m);
               Movie movie = Movie.fromJson(json);
@@ -123,9 +117,4 @@ class MovieDatabase {
           return movies.cast<String, Movie>();
         },
       );
-    } catch (e) {
-      print(e);
-      return {};
-    }
-  }
 }

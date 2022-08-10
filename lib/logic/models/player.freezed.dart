@@ -145,7 +145,9 @@ class _$_Player extends _Player {
 
   @override
   Map<String, dynamic> toJson() {
-    return _$$_PlayerToJson(this);
+    return _$$_PlayerToJson(
+      this,
+    );
   }
 }
 
@@ -158,9 +160,9 @@ abstract class _Player extends Player {
   factory _Player.fromJson(Map<String, dynamic> json) = _$_Player.fromJson;
 
   @override
-  String get name => throw _privateConstructorUsedError;
+  String get name;
   @override
-  Map<dynamic, dynamic> get rounds => throw _privateConstructorUsedError;
+  Map<dynamic, dynamic> get rounds;
   @override
   @JsonKey(ignore: true)
   _$$_PlayerCopyWith<_$_Player> get copyWith =>

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import '../main.dart';
 import '../ui/dashboard.dart';
 import '../ui/game.dart';
+import '../ui/profile_view.dart';
 import '../ui/splash.dart';
 import '../ui/welcome.dart';
 
@@ -20,6 +21,7 @@ part 'my_route.gr.dart';
       path: '/',
       children: [
         AutoRoute(path: '', page: DashboardPage),
+        AutoRoute(path: 'profile', page: ProfilePage),
         AutoRoute(path: 'game', page: GamePage),
         //AutoRoute(path: 'info',page: InfoDialogPage,fullscreenDialog: true)
       ],

@@ -10,7 +10,6 @@ import '../logic/caps.dart';
 import '../logic/images_index.dart';
 import '../logic/models/language.dart';
 import '../logic/models/movie.dart';
-import '../logic/models/player.dart';
 import '../logic/provider_list.dart';
 import 'dialogs.dart';
 import 'utils/game_loader.dart';
@@ -44,14 +43,6 @@ class GamePagePortrait extends ConsumerWidget {
 
     final size = MediaQuery.of(context).size;
     final int selectedRound = ref.watch(selectedImageIndexProvider(movieId));
-
-    final user = ref.watch(firebaseUserProvider);
-
-    final Player? player = ref.watch(playerProvider(user.uid)).when(
-          data: (data) => data,
-          error: (e, s) => null,
-          loading: () => null,
-        );
 
     final Movie? movie = ref
         .watch(movieProvider(movieId))
@@ -376,7 +367,6 @@ class GamePageLandScape extends ConsumerWidget {
                                 autocorrect: movie.lang == Lang.english,
                                 cursorHeight: size.shortestSide * 0.05,
                                 onSubmitted: (str) {
-                                  print(str);
                                   if (movie.suggestions
                                       .contains(textController.text)) {
                                     final portraitImageUrl = ref
