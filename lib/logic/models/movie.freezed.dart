@@ -181,7 +181,7 @@ class __$$_MovieCopyWithImpl<$Res> extends _$MovieCopyWithImpl<$Res>
 /// @nodoc
 
 @JsonSerializable(fieldRename: FieldRename.snake, explicitToJson: true)
-class _$_Movie implements _Movie {
+class _$_Movie extends _Movie {
   _$_Movie(
       {required this.lang,
       this.mCast,
@@ -193,7 +193,8 @@ class _$_Movie implements _Movie {
       final List<String> usersPlayed = const []})
       : _suggestions = suggestions,
         _usersFound = usersFound,
-        _usersPlayed = usersPlayed;
+        _usersPlayed = usersPlayed,
+        super._();
 
   factory _$_Movie.fromJson(Map<String, dynamic> json) =>
       _$$_MovieFromJson(json);
@@ -282,7 +283,7 @@ class _$_Movie implements _Movie {
   }
 }
 
-abstract class _Movie implements Movie {
+abstract class _Movie extends Movie {
   factory _Movie(
       {required final Lang lang,
       final String? mCast,
@@ -292,6 +293,7 @@ abstract class _Movie implements Movie {
       required final String postedOn,
       final List<String> usersFound,
       final List<String> usersPlayed}) = _$_Movie;
+  _Movie._() : super._();
 
   factory _Movie.fromJson(Map<String, dynamic> json) = _$_Movie.fromJson;
 

@@ -20,4 +20,8 @@ class Movie with _$Movie {
   }) = _Movie;
 
   factory Movie.fromJson(Map<String, Object?> json) => _$MovieFromJson(json);
+
+  Movie._();
+  Map<String, dynamic> get forAnalytics =>
+      {'name': name, "posted_on": postedOn, 'lang': lang.name};
 }

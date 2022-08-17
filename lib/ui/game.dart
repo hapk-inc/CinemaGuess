@@ -14,7 +14,6 @@ import '../logic/provider_list.dart';
 import 'dialogs.dart';
 import 'utils/game_loader.dart';
 import 'utils/row_indicator.dart';
-import 'utils/you_mean_snack.dart';
 
 class GamePage extends StatelessWidget {
   const GamePage({Key? key}) : super(key: key);
@@ -340,7 +339,21 @@ class GamePageLandScape extends ConsumerWidget {
         .maybeWhen(orElse: () => null, data: (m) => m);
     final int selectedRound = ref.watch(selectedImageIndexProvider(movieId));
 
+    final portraitImageUrl = ref
+        .watch(moviePosterProvider(movieId))
+        .maybeWhen(orElse: () => "", data: (url) => url);
+
+    final landScapeImageUrl = ref
+        .watch(moviePosterLandscapeProvider(movieId))
+        .maybeWhen(orElse: () => "", data: (url) => url);
+
     final size = MediaQuery.of(context).size;
+
+    final int myRoundCount = ref.watch(myRoundCountProvider(movieId)).when(
+          loading: () => 0,
+          data: (value) => value,
+          error: (e, s) => 0,
+        );
 
     final textController = TextEditingController();
 
@@ -349,7 +362,7 @@ class GamePageLandScape extends ConsumerWidget {
       child: movie == null
           ? const GamePageLoader()
           : ref.watch(allCluesProvider(movieId)).maybeWhen(
-                orElse: () => Container(),
+                orElse: () => const GamePageLoader(),
                 data: (urls) => Container(
                   padding: EdgeInsets.all(size.longestSide * 0.01),
                   child: Column(
@@ -365,41 +378,39 @@ class GamePageLandScape extends ConsumerWidget {
                                 autofocus: true,
                                 controller: textController,
                                 autocorrect: movie.lang == Lang.english,
-                                cursorHeight: size.shortestSide * 0.05,
-                                onSubmitted: (str) {
-                                  if (movie.suggestions
-                                      .contains(textController.text)) {
-                                    final portraitImageUrl = ref
-                                        .watch(moviePosterProvider(movieId))
-                                        .maybeWhen(
-                                            orElse: () => "",
-                                            data: (url) => url);
-
-                                    final landScapeImageUrl = ref
-                                        .watch(moviePosterLandscapeProvider(
-                                            movieId))
-                                        .maybeWhen(
-                                            orElse: () => "",
-                                            data: (url) => url);
-                                    ref.watch(updateFoundProvider);
-                                    showDialog(
-                                      context: context,
-                                      builder: (_) => MovieInfoDialog(
-                                          id: movieId,
-                                          iMovie: movie,
-                                          portraitImageUrl: portraitImageUrl,
-                                          landScapeImageUrl: landScapeImageUrl),
-                                    );
-                                  } else {
-                                    ref.watch(updateRoundProvider(movieId));
-                                  }
-                                },
+                                cursorHeight: size.shortestSide * 0.07,
                                 onChanged: (name) {
                                   if (movie.suggestions
                                       .contains(name.toLowerCase())) {
                                     ScaffoldMessenger.of(context)
                                         .showSnackBar(
-                                          youMeanSnackBar(movie, context),
+                                          SnackBar(
+                                            elevation: 4,
+                                            content: Text(
+                                              "You mean ${movie.name.capitalize}",
+                                              style: GoogleFonts.poppins(
+                                                  color: Colors.grey),
+                                            ),
+                                            action: SnackBarAction(
+                                              label: "Search",
+                                              onPressed: () {
+                                                ref.watch(updateFoundProvider);
+                                                showDialog(
+                                                    context: context,
+                                                    builder: (_) =>
+                                                        MovieInfoDialog(
+                                                          id: movieId,
+                                                          iMovie: movie,
+                                                          portraitImageUrl:
+                                                              portraitImageUrl,
+                                                          landScapeImageUrl:
+                                                              landScapeImageUrl,
+                                                          halfSize: true,
+                                                        )).then((value) =>
+                                                    context.router.popTop());
+                                              },
+                                            ),
+                                          ),
                                         )
                                         .closed
                                         .then((value) =>
@@ -415,36 +426,65 @@ class GamePageLandScape extends ConsumerWidget {
                                     color: Colors.black38,
                                   ),
                                   suffixIcon: TextButton(
+                                    child: const Text(
+                                      'Skip',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
                                     onPressed: () {
-                                      if (movie.suggestions
-                                          .contains(textController.text)) {
-                                        final portraitImageUrl = ref
-                                            .watch(moviePosterProvider(movieId))
-                                            .maybeWhen(
-                                                orElse: () => "",
-                                                data: (url) => url);
-
-                                        final landScapeImageUrl = ref
-                                            .watch(moviePosterLandscapeProvider(
-                                                movieId))
-                                            .maybeWhen(
-                                                orElse: () => "",
-                                                data: (url) => url);
-                                        ref.watch(updateFoundProvider);
-                                        showDialog(
-                                            context: context,
-                                            builder: (_) => MovieInfoDialog(
-                                                id: movieId,
-                                                iMovie: movie,
-                                                portraitImageUrl:
-                                                    portraitImageUrl,
-                                                landScapeImageUrl:
-                                                    landScapeImageUrl));
+                                      ref.watch(updateRoundProvider(movieId));
+                                      ref
+                                          .watch(selectedImageIndexProvider(
+                                                  movieId)
+                                              .notifier)
+                                          .state = myRoundCount;
+                                    },
+                                  ),
+                                  suffix: InkWell(
+                                    onTap: () {
+                                      if (textController.text.isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                              "Enter something",
+                                              style: GoogleFonts.poppins(),
+                                            ),
+                                          ),
+                                        );
                                       } else {
-                                        ref.watch(updateRoundProvider(movieId));
+                                        if (movie.suggestions.contains(
+                                                textController.text) ||
+                                            movie.name.toLowerCase() ==
+                                                textController.text
+                                                    .toLowerCase()) {
+                                          ref.watch(updateFoundProvider);
+                                          showDialog(
+                                              context: context,
+                                              builder: (_) => MovieInfoDialog(
+                                                    id: movieId,
+                                                    iMovie: movie,
+                                                    portraitImageUrl:
+                                                        portraitImageUrl,
+                                                    landScapeImageUrl:
+                                                        landScapeImageUrl,
+                                                    halfSize: true,
+                                                  )).then((value) =>
+                                              context.router.popTop());
+                                        } else {
+                                          ref.watch(
+                                              updateRoundProvider(movieId));
+                                          ref
+                                              .watch(selectedImageIndexProvider(
+                                                      movieId)
+                                                  .notifier)
+                                              .state = myRoundCount;
+                                        }
                                       }
                                     },
-                                    child: const Text("Search"),
+                                    child: const Text(
+                                      "Search",
+                                      style: TextStyle(color: Colors.blue),
+                                    ),
                                   ),
                                 ),
                               ),

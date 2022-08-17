@@ -50,8 +50,8 @@ class MovieInfoDialog extends ConsumerWidget {
       contentPadding: EdgeInsets.zero,
       content: SizedBox(
         height: size.height *
-            (halfSize && orientation == Orientation.portrait ? 0.5 : 1),
-        width: size.width,
+            (halfSize && orientation == Orientation.portrait ? 0.5 : 0.7),
+        width: size.width * (orientation == Orientation.portrait ? 1 : 0.7),
         child: GridTile(
           footer: FadeInUp(
             child: Container(

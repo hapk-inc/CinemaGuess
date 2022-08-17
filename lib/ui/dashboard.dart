@@ -259,6 +259,8 @@ class AllMovieTileLandscape extends ConsumerWidget {
                     )
               : InkWell(
                   onTap: () {
+                    ref.watch(analyticsProvider).logEvent(
+                        name: "Movie_Viewed", parameters: movie.forAnalytics);
                     ref.read(movieIdProvider.notifier).state = id;
                     context.router.push(const GameRoute());
                   },
@@ -359,12 +361,12 @@ class LangMoviesPortrait extends ConsumerWidget {
               DateTime aDate = DateFormat("yMMMMd").parse(a.postedOn);
               DateTime bDate = DateFormat("yMMMMd").parse(b.postedOn);
 
-              return aDate.compareTo(bDate);
+              return bDate.compareTo(aDate);
             },
           );
 
           return ListView(
-            reverse: true,
+            // reverse: true,
             padding: EdgeInsets.all(size.shortestSide * 0.02),
             scrollDirection: Axis.horizontal,
             children: sorted.entries
@@ -456,6 +458,9 @@ class LangMoviesPortrait extends ConsumerWidget {
                                 onTap: () {
                                   ref.read(movieIdProvider.notifier).state =
                                       eMap.key;
+                                  ref.watch(analyticsProvider).logEvent(
+                                      name: "Movie_Viewed",
+                                      parameters: eMap.value.forAnalytics);
                                   context.router.push(const GameRoute());
                                 },
                                 child: Padding(
@@ -608,6 +613,9 @@ class CarouselTodayMovieTile extends ConsumerWidget {
             : InkWell(
                 onTap: () {
                   ref.read(movieIdProvider.notifier).state = mEntry.key;
+                  ref.watch(analyticsProvider).logEvent(
+                      name: "Movie_Viewed",
+                      parameters: mEntry.value.forAnalytics);
                   context.router.push(const GameRoute());
                 },
                 child: Center(
